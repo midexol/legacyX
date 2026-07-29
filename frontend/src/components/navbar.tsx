@@ -10,7 +10,8 @@ import { useWallet } from "@/providers/wallet-provider";
 export function Navbar() {
   const pathname = usePathname();
   const { isConnected, address, connectWallet, disconnectWallet } = useWallet();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -27,12 +28,12 @@ export function Navbar() {
 
   const handleConnect = () => {
     connectWallet();
-    setIsModalOpen(false);
+    setIsConnectModalOpen(false);
   };
 
   const handleDisconnect = () => {
     disconnectWallet();
-    setIsModalOpen(false);
+    setIsAccountModalOpen(false);
   };
 
   const copyAddress = () => {
@@ -86,37 +87,34 @@ export function Navbar() {
           })}
         </nav>
 
-        {/* Right: Connect Wallet Button / Address Pill */}
+        {/* Right: Connect Wallet Button / Connected Pill Button */}
         <div className="flex items-center gap-3">
           {!isConnected ? (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setIsModalOpen(true)}
-              className="relative group px-5 py-2.5 rounded-xl bg-[#121620] border border-white/10 hover:border-[#FF3A56]/50 text-white font-semibold text-xs transition-all overflow-hidden shadow-lg shadow-black/40"
+              onClick={() => setIsConnectModalOpen(true)}
+              className="relative group px-5 py-2.5 rounded-xl bg-[#121620] border border-white/10 hover:border-[#FF3A56]/50 text-white font-semibold text-xs transition-all shadow-lg shadow-black/40"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF3A56]/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               <span className="relative z-10 flex items-center gap-2">
                 <Wallet className="w-3.5 h-3.5 text-[#FF3A56]" />
                 <span>Connect Wallet</span>
               </span>
             </motion.button>
           ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsModalOpen(!isModalOpen)}
-                className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-[#121620] border border-white/10 hover:border-[#FF3A56]/40 text-slate-100 text-xs font-mono transition-all shadow-md group"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-                <span className="font-semibold text-white group-hover:text-[#FF3A56] transition-colors">
-                  {address}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
-              </button>
-            </div>
+            <button
+              onClick={() => setIsAccountModalOpen(true)}
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#121620] border border-white/10 hover:border-[#FF3A56]/40 text-slate-100 text-xs font-mono transition-all shadow-md group"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="font-semibold text-white group-hover:text-[#FF3A56] transition-colors">
+                {address}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
+            </button>
           )}
 
           {/* Mobile Hamburger Toggle */}
@@ -155,105 +153,144 @@ export function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Connect Wallet Modal */}
+      {/* 1. CENTERED CONNECT WALLET MODAL DIALOG */}
       <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {isConnectModalOpen && !isConnected && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+              onClick={() => setIsConnectModalOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-md bg-[#121620] border border-white/10 rounded-2xl p-6 shadow-2xl z-10 space-y-5"
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2 }}
+              className="relative max-w-md w-full bg-[#121620] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 z-[110]"
             >
-              {!isConnected ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Wallet className="w-5 h-5 text-[#FF3A56]" />
-                        <span>Connect Web3 Wallet</span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Connect to access Flare Coston2 inheritance dApp
-                      </p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FF3A56]/20 text-[#FF3A56] border border-[#FF3A56]/30">
-                      Coston2
-                    </span>
-                  </div>
-
-                  <div className="space-y-2.5 pt-2">
-                    {[
-                      { name: "MetaMask", icon: "🦊", desc: "Popular EVM Wallet" },
-                      { name: "Rainbow", icon: "🌈", desc: "Mobile & Web3 Extension" },
-                      { name: "WalletConnect", icon: "🔗", desc: "Scan QR with mobile wallet" },
-                    ].map((provider) => (
-                      <button
-                        key={provider.name}
-                        onClick={handleConnect}
-                        className="w-full flex items-center justify-between p-4 rounded-xl bg-[#08090C] hover:bg-[#1A202C] border border-white/5 hover:border-[#FF3A56]/40 transition-all text-left group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{provider.icon}</span>
-                          <div>
-                            <span className="font-semibold text-white group-hover:text-[#FF3A56] transition-colors block text-sm">
-                              {provider.name}
-                            </span>
-                            <span className="text-[11px] text-slate-400">{provider.desc}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs text-[#FF3A56] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                          Connect →
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+              {/* Modal Header */}
+              <div className="flex items-start justify-between border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="font-bold text-lg text-white">Connect a Wallet</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Select your preferred Web3 provider for Flare Coston2 Testnet.
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                    <div>
-                      <span className="text-xs text-slate-400 block font-mono uppercase tracking-wider">
-                        Connected Account
-                      </span>
-                      <span className="font-mono text-sm font-bold text-white mt-1 block">
-                        {address}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold mt-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Flare Coston2 Testnet
-                      </span>
-                    </div>
-                    <button
-                      onClick={copyAddress}
-                      className="p-2 rounded-lg bg-[#08090C] border border-white/10 text-slate-400 hover:text-[#FF3A56] transition-colors"
-                      title="Copy Address"
-                    >
-                      {isCopied ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
+                <button
+                  onClick={() => setIsConnectModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
+              {/* Wallet Options List */}
+              <div className="space-y-2.5">
+                {[
+                  { name: "MetaMask", icon: "🦊", desc: "Browser Extension / Mobile" },
+                  { name: "Rainbow", icon: "🌈", desc: "Mobile & Web3 Extension" },
+                  { name: "WalletConnect", icon: "🔗", desc: "Scan QR Code" },
+                  { name: "Coinbase Wallet", icon: "🛡️", desc: "Self-Custodial" },
+                ].map((provider) => (
                   <button
-                    onClick={handleDisconnect}
-                    className="w-full py-3 rounded-xl bg-[#FF3A56]/10 hover:bg-[#FF3A56]/20 border border-[#FF3A56]/30 text-[#FF3A56] text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                    key={provider.name}
+                    onClick={handleConnect}
+                    className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-[#FF3A56]/40 transition-all cursor-pointer w-full group text-left"
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Disconnect Wallet</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{provider.icon}</span>
+                      <div>
+                        <span className="font-bold text-sm text-white group-hover:text-[#FF3A56] transition-colors block">
+                          {provider.name}
+                        </span>
+                        <span className="text-xs text-slate-400 block">{provider.desc}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-[#FF3A56] opacity-0 group-hover:opacity-100 transition-opacity">
+                      Connect →
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. CENTERED CONNECTED ACCOUNT MODAL DIALOG */}
+      <AnimatePresence>
+        {isAccountModalOpen && isConnected && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAccountModalOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2 }}
+              className="relative max-w-md w-full bg-[#121620] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-5 z-[110]"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="font-bold text-lg text-white">Connected Account</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Flare Coston2 Testnet Session
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsAccountModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#08090C] border border-white/5 space-y-3 font-mono">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">EVM Address</span>
+                  <button
+                    onClick={copyAddress}
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors flex items-center gap-1 text-xs"
+                  >
+                    {isCopied ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isCopied ? "Copied" : "Copy"}</span>
                   </button>
                 </div>
-              )}
+                <span className="text-xs font-bold text-white block break-all">
+                  0x71C7240a1B8c3dE8B92e85F69A5C4E5E89F2
+                </span>
+
+                <div className="pt-2 border-t border-white/5 flex justify-between text-xs">
+                  <span className="text-slate-400">Network:</span>
+                  <span className="text-emerald-400 font-bold">Flare Coston2</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Locked Vault Balance:</span>
+                  <span className="text-white font-bold">10,000 FXRP</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleDisconnect}
+                className="w-full py-3 rounded-xl bg-[#FF3A56]/10 hover:bg-[#FF3A56]/20 border border-[#FF3A56]/30 text-[#FF3A56] font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Disconnect Wallet</span>
+              </button>
             </motion.div>
           </div>
         )}
