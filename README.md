@@ -68,7 +68,7 @@ legacyX/
 └── docs/          # Documentation, pitch deck, demo materials
 ```
 
-*(Structure will be populated as each track's work lands.)*
+*(`backend/` is implemented — see [backend/README.md](backend/README.md). `contracts/`, `design/`, and `docs/` will be populated as those tracks land.)*
 
 ## How It Works — Architecture
 
@@ -79,12 +79,26 @@ legacyX/
 
 ## Getting Started
 
-> Setup instructions will be added as each component (contracts, backend, frontend) is scaffolded.
-
 ```bash
 git clone https://github.com/midexol/legacyX.git
 cd legacyX
+
+# Frontend (Next.js)
+npm install --prefix frontend
+npm run dev:frontend
+
+# Backend (Express + Prisma API)
+npm run install:backend
+cp backend/.env.example backend/.env
+npm run --prefix backend prisma:migrate -- --name init
+npm run --prefix backend seed
+npm run dev:backend
+
+# Or run both together:
+npm run dev:all
 ```
+
+The backend listens on `http://localhost:4000` by default (see `backend/.env.example`) and expects the frontend at `http://localhost:3000`. Full API reference and design notes: [backend/README.md](backend/README.md).
 
 ## Team
 
@@ -93,10 +107,10 @@ Built for a hackathon by a 5-person team covering smart contracts, backend, fron
 ## Roadmap
 
 - [ ] Legacy Vault smart contract (deposits, beneficiaries, withdrawals)
-- [ ] Inheritance condition verification (simulated → real-world data via Flare)
-- [ ] Beneficiary claim flow
-- [ ] Private OTC marketplace contract + matching
-- [ ] Full frontend integration
+- [x] Inheritance condition verification (simulated → real-world data via Flare) — backend REST API + background sweep, see [backend/README.md](backend/README.md)
+- [x] Beneficiary claim flow — backend API (signature-verified lookup + claim)
+- [x] Private OTC marketplace contract + matching — backend off-chain matching engine (on-chain settlement contract still pending)
+- [ ] Full frontend integration (frontend currently uses local mock state; wiring it to the backend API is a separate task)
 - [ ] Testnet deployment (Flare Coston2)
 - [ ] Demo & hackathon submission
 

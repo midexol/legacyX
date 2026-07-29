@@ -1,0 +1,178 @@
+// LegacyX backend data model
+// SQLite is used for zero-config hackathon development.
+// To move to Postgres for a shared/staging environment: change `provider` to
+// "postgresql", point DATABASE_URL at a Postgres instance, re-run
+// `npm run prisma:migrate`, and (optionally) promote the status/type/side
+// String fields below back into real `enum` blocks — SQLite's connector
+// doesn't support enums, which is why they're plain validated strings here.
+// The application layer (zod schemas + services) already enforces the valid
+// value sets, so behavior is unaffected either way.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  address   String   @unique
+  nonce     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vaults Vault[]
+
+  @@map("users")
+}
+
+model Vault {
+  id     String @id @default(cuid())
+  name   String
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  currency String @default("FXRP")
+  balance  Float  @default(0)
+
+  /// One of: ACTIVE | PENDING_VERIFICATION | UNLOCKED
+  status String @default("ACTIVE")
+
+  // Inactivity-based inheritance window
+  inactivityDays  Int      @default(365)
+  lastHeartbeatAt DateTime @default(now())
+  unlockedAt      DateTime?
+  // Snapshot of `balance` taken the moment the vault unlocks, so each
+  // beneficiary's claimable share is fixed at unlock time and unaffected
+  // by other beneficiaries claiming before them.
+  unlockedBalance Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  beneficiaries Beneficiary[]
+  conditions    InheritanceCondition[]
+  transactions  VaultTransaction[]
+  claims        Claim[]
+
+  @@map("vaults")
+}
+
+model Beneficiary {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  name          String
+  address       String
+  allocationBps Int // basis points, 10000 = 100%
+
+  createdAt DateTime @default(now())
+
+  claims Claim[]
+
+  @@map("beneficiaries")
+}
+
+model InheritanceCondition {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  /// One of: INACTIVITY | MANUAL_APPROVAL | MULTI_PARTY_APPROVAL | LEGAL_DOCUMENT
+  type String
+  /// One of: PENDING | SATISFIED
+  status String @default("PENDING")
+
+  // JSON-encoded config, shape depends on `type`:
+  // INACTIVITY: {} (uses vault.inactivityDays / lastHeartbeatAt)
+  // MANUAL_APPROVAL: {}
+  // MULTI_PARTY_APPROVAL: { requiredApprovals: number, approvers: string[] }
+  // LEGAL_DOCUMENT: { documentRef: string }
+  config String @default("{}")
+
+  satisfiedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  approvals ConditionApproval[]
+
+  @@map("inheritance_conditions")
+}
+
+model ConditionApproval {
+  id              String               @id @default(cuid())
+  conditionId     String
+  condition       InheritanceCondition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  approverAddress String
+  createdAt       DateTime             @default(now())
+
+  @@unique([conditionId, approverAddress])
+  @@map("condition_approvals")
+}
+
+model VaultTransaction {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  /// One of: DEPOSIT | WITHDRAW | CLAIM
+  type      String
+  amount    Float
+  txHash    String
+  createdAt DateTime @default(now())
+
+  @@map("vault_transactions")
+}
+
+model Claim {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  beneficiaryId String
+  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  amount    Float
+  txHash    String
+  claimedAt DateTime @default(now())
+
+  @@map("claims")
+}
+
+model OtcOrder {
+  id     String @id @default(cuid())
+  /// One of: BUY | SELL
+  side   String
+  amount Float
+  price  Float
+  /// One of: OPEN | MATCHED | SETTLED | CANCELLED
+  status String @default("OPEN")
+
+  // Kept private — never returned in the public order book response.
+  ownerAddress String
+  vaultId      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tradeId String?
+  trade   OtcTrade? @relation(fields: [tradeId], references: [id])
+
+  @@map("otc_orders")
+}
+
+model OtcTrade {
+  id        String   @id @default(cuid())
+  amount    Float
+  price     Float
+  txHash    String
+  settledAt DateTime @default(now())
+
+  orders OtcOrder[]
+
+  @@map("otc_trades")
+}
