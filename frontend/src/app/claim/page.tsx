@@ -41,17 +41,18 @@ export default function ClaimPage() {
   };
 
   return (
-    <div className="space-y-8 bg-[#0B0E14] min-h-screen text-white pb-20">
+    <div className="space-y-12 py-6 bg-[#08090C] min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="border-b border-white/5 pb-6">
-        <div className="flex items-center gap-2.5">
-          <ShieldCheck className="w-6 h-6 text-[#FF3A56]" />
-          <h1 className="text-3xl font-extrabold text-white">
-            Beneficiary Claim Portal
-          </h1>
+      <div className="border-b border-white/5 pb-8 space-y-1.5">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF3A56]/10 border border-[#FF3A56]/30 text-[#FF3A56] text-xs font-mono font-bold">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>CONFIDENTIAL ENCLAVE CLAIM TERMINAL</span>
         </div>
-        <p className="text-sm text-slate-400 mt-1">
-          Scan wallet eligibility, verify Flare enclave cryptographic proofs, and execute inheritance claims
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Beneficiary Claim Portal
+        </h1>
+        <p className="text-sm text-slate-400 max-w-2xl">
+          Scan EVM wallet eligibility, verify Flare enclave cryptographic attestations, and execute zero-friction asset inheritance claims.
         </p>
       </div>
 

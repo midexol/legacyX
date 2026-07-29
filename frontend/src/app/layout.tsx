@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { WalletProvider } from "@/providers/wallet-provider";
 import { Navbar } from "@/components/navbar";
 import Link from "next/link";
 
@@ -22,8 +23,9 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} bg-[#08090C] text-white antialiased min-h-screen`}>
         <ThemeProvider>
-          <div className="flex flex-col min-h-screen bg-[#08090C] text-white selection:bg-[#FF3A56]/30 selection:text-[#FF3A56]">
-            <Navbar />
+          <WalletProvider>
+            <div className="flex flex-col min-h-screen bg-[#08090C] text-white selection:bg-[#FF3A56]/30 selection:text-[#FF3A56]">
+              <Navbar />
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
               {children}
             </main>
@@ -60,8 +62,9 @@ export default function RootLayout({
               </div>
             </footer>
           </div>
-        </ThemeProvider>
-      </body>
-    </html>
+        </WalletProvider>
+      </ThemeProvider>
+    </body>
+  </html>
   );
 }
