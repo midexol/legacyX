@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Home, Lock, ShieldCheck, ArrowLeftRight, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,8 +20,20 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-3 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-2 p-1.5 bg-[#121620]/90 backdrop-blur-md border border-white/10 rounded-xl shadow-lg">
-      <div className="flex flex-col gap-2">
+    <aside className="fixed left-3 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-2 p-2 bg-[#121620]/90 backdrop-blur-md border border-white/10 rounded-xl shadow-lg">
+      {/* Brand Logo Header */}
+      <Link href="/" className="relative w-7 h-7 flex items-center justify-center my-1 group" title="LegacyX Home">
+        <Image
+          src="/logo.png"
+          alt="LegacyX"
+          width={28}
+          height={28}
+          priority
+          className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,58,86,0.3)] group-hover:scale-110 transition-transform"
+        />
+      </Link>
+
+      <div className="flex flex-col gap-1.5 border-t border-white/5 pt-1.5">
         {navItems.map((item, idx) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href === "/" && pathname === "/overview");

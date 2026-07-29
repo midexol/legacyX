@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Wallet, ChevronDown, CheckCircle2, Copy, LogOut, BookOpen, Menu, X, Shield, Activity } from "lucide-react";
+import { Wallet, ChevronDown, CheckCircle2, Copy, LogOut, BookOpen, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWallet } from "@/providers/wallet-provider";
 
@@ -45,10 +46,17 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-[#08090C]/85 backdrop-blur-xl border-b border-white/5 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Left: Red/White Stylized L logo + LEGACYX title */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF3A56] to-[#c91d39] flex items-center justify-center font-black text-base text-white shadow-lg shadow-[#FF3A56]/30 group-hover:scale-105 transition-transform duration-300">
-            L
+        {/* Left: Official Logo + LEGACYX title */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="relative w-9 h-9 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+            <Image
+              src="/logo.png"
+              alt="LegacyX Logo"
+              width={36}
+              height={36}
+              priority
+              className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,58,86,0.3)]"
+            />
           </div>
           <span className="font-extrabold text-lg tracking-wider text-white uppercase flex items-center gap-0.5">
             LEGACY<span className="text-[#FF3A56]">X</span>
