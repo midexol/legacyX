@@ -179,20 +179,6 @@ export function HowItWorksSection() {
                   {/* Background Shield Pulse */}
                   <div className="absolute w-48 h-48 bg-[#FF3A56]/20 blur-[50px] rounded-full animate-pulse" />
 
-                  {/* Video loop with canvas overlay */}
-                  <video
-                    src="/assets/how-it-works-loop.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-44 h-44 object-contain relative z-10 opacity-80 mix-blend-screen hidden group-hover:block"
-                    onError={(e) => {
-                      // Silently hide video element if asset file is missing in static directory
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
-                  />
-
                   {/* Interactive SVG Enclave Shield Stage matching active step */}
                   <div className="relative z-10 flex flex-col items-center space-y-4">
                     <motion.div
