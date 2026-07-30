@@ -1,0 +1,94 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  transition: all var(--dur-fast) ease;
+  overflow: hidden;
+  white-space: nowrap;
+  transform: translateY(0);
+  user-select: none;
+}
+
+/* Mercury fill bar */
+.mercury {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px; width: 0;
+  background: currentColor;
+  opacity: 0.5;
+  transition: width var(--dur-med) var(--ease-out);
+  pointer-events: none;
+}
+
+.btn:hover .mercury { width: 100%; }
+
+/* Depress on click */
+.btn:active { transform: translateY(1px); }
+
+.label { position: relative; z-index: 1; }
+
+/* ── Variants ── */
+.primary {
+  background: var(--bone);
+  color: var(--ink);
+  border: 1px solid var(--bone);
+}
+.primary:hover {
+  background: var(--bone-2);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-1);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--bone-2);
+  border: 1px solid var(--border-mid);
+}
+.ghost:hover {
+  color: var(--bone);
+  border-color: var(--border-hi);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-0);
+}
+
+.bronze {
+  background: transparent;
+  color: var(--bronze);
+  border: 1px solid rgba(182,141,64,0.4);
+}
+.bronze:hover {
+  background: var(--bronze-2);
+  border-color: var(--bronze);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-bronze);
+}
+
+.danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(176,58,46,0.3);
+}
+.danger:hover {
+  background: var(--danger-2);
+  transform: translateY(-1px);
+}
+
+/* ── Sizes ── */
+.sm { font-size: 11px; padding: 8px 16px; }
+.md { font-size: 12px; padding: 12px 24px; }
+.lg { font-size: 13px; padding: 15px 32px; }
+
+/* ── Disabled ── */
+.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}

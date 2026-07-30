@@ -1,0 +1,26 @@
+.thread {
+  position: absolute;
+  left: 40px;
+  top: 0;
+  width: 2px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .thread { left: 16px; }
+}
+
+.svg {
+  width: 2px;
+  height: 100%;
+  display: block;
+}
+
+.static {
+  opacity: 0.4;
+}
+
+.animated {
+  opacity: 0.6;
+}

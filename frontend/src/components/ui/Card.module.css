@@ -1,0 +1,62 @@
+.card {
+  background: var(--ink-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--s6);
+  transition:
+    transform var(--dur-med) var(--ease-out),
+    box-shadow var(--dur-med) var(--ease-out),
+    border-color var(--dur-fast) ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244,242,238,0.06), transparent);
+  pointer-events: none;
+}
+
+.elevated:hover,
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-1);
+  border-color: var(--border-mid);
+}
+
+.bronze {
+  border-color: rgba(182,141,64,0.15);
+}
+
+.bronze:hover {
+  border-color: rgba(182,141,64,0.3);
+  box-shadow: var(--shadow-bronze);
+}
+
+.clickable { cursor: pointer; }
+
+.cardLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: var(--s3);
+}
+
+.cardValue {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  color: var(--bone);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: var(--s2);
+}
+
+.cardSub {
+  font-size: 13px;
+  color: var(--bone-3);
+}

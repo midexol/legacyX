@@ -1,0 +1,19 @@
+.odometer {
+  display: inline-flex;
+  align-items: baseline;
+  overflow: hidden;
+}
+
+.digit {
+  display: inline-block;
+  transition: none;
+}
+
+.rolling {
+  animation: digit-roll-up 0.12s ease-out;
+}
+
+@keyframes digit-roll-up {
+  0%   { transform: translateY(40%); opacity: 0.3; }
+  100% { transform: translateY(0);   opacity: 1;   }
+}

@@ -1,0 +1,118 @@
+/* ============================================================
+   LEGACYX — DESIGN TOKENS  (Gold Theme, Light/Dark aware)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Archivo:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Fonts */
+  --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body:    'Archivo', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ── PRIMARY ACCENT: Gold (mode-stable) ── */
+  --blue:   #D4A017;          /* warm gold */
+  --purple: #B87333;          /* copper gold */
+  --cyan:   #FFD166;          /* bright gold */
+  --gold:   #FFD166;
+  --green:  #00D68F;
+  --danger: #FF5A7A;
+
+  /* rgb tuples for rgba() composition — keeps accents consistent everywhere */
+  --blue-rgb:   212, 160, 23;
+  --purple-rgb: 184, 115, 51;
+  --cyan-rgb:   255, 209, 102;
+  --gold-rgb:   255, 209, 102;
+  --green-rgb:  0, 214, 143;
+  --danger-rgb: 255, 90, 122;
+
+  /* Gradients — all gold */
+  --grad-blue-purple: linear-gradient(135deg, #FFD166, #D4A017);
+  --grad-blue-cyan:   linear-gradient(135deg, #FFD166, #B87333);
+  --grad-gold:        linear-gradient(135deg, #FFD166, #FF9F43);
+  --grad-green:       linear-gradient(135deg, #00D68F, #00B4D8);
+
+  /* Radius */
+  --radius-sm:   8px;
+  --radius-md:   16px;
+  --radius-lg:   24px;
+  --radius-xl:   32px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:   cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:  0.15s;
+  --dur-med:   0.3s;
+  --dur-slow:  0.6s;
+
+  /* Spacing */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+  --space-9:  96px;
+  --space-10: 128px;
+
+  /* Navbar height */
+  --navbar-h: 72px;
+}
+
+/* ============================================================
+   DARK THEME (default)
+   ============================================================ */
+:root,
+[data-theme='dark'] {
+  --bg-primary:    #050505;
+  --bg-secondary:  #0B0B0D;
+  --bg-card:       rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.07);
+  --bg-glass:      rgba(11, 11, 13, 0.85);
+
+  --text-primary:   #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted:     rgba(255, 255, 255, 0.35);
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-card:   rgba(255, 209, 102, 0.12);
+  --border-glow:   rgba(255, 209, 102, 0.45);
+
+  --shadow-blue:   0 0 40px rgba(212, 160, 23, 0.3);
+  --shadow-purple: 0 0 40px rgba(184, 115, 51, 0.25);
+  --shadow-gold:   0 0 40px rgba(255, 209, 102, 0.35);
+  --shadow-card:   0 8px 32px rgba(0, 0, 0, 0.5);
+
+  --bg-elevated: #0D0D10;
+  --noise-opacity: 0.4;
+}
+
+/* ============================================================
+   LIGHT THEME
+   ============================================================ */
+[data-theme='light'] {
+  --bg-primary:    #F8F5EE;
+  --bg-secondary:  #F1ECDF;
+  --bg-card:       rgba(20, 14, 4, 0.035);
+  --bg-card-hover: rgba(20, 14, 4, 0.06);
+  --bg-glass:      rgba(248, 245, 238, 0.85);
+
+  --text-primary:   #211A0E;
+  --text-secondary: rgba(33, 26, 14, 0.65);
+  --text-muted:     rgba(33, 26, 14, 0.4);
+
+  --border-subtle: rgba(33, 26, 14, 0.08);
+  --border-card:   rgba(184, 115, 51, 0.18);
+  --border-glow:   rgba(184, 115, 51, 0.5);
+
+  --shadow-blue:   0 0 40px rgba(212, 160, 23, 0.18);
+  --shadow-purple: 0 0 40px rgba(184, 115, 51, 0.15);
+  --shadow-gold:   0 0 32px rgba(184, 115, 51, 0.22);
+  --shadow-card:   0 8px 32px rgba(80, 60, 20, 0.12);
+
+  --bg-elevated: #FFFDF8;
+  --noise-opacity: 0.15;
+}
