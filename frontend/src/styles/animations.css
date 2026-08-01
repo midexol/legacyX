@@ -100,6 +100,16 @@
   transform: translateY(0);
 }
 
+/* Slowly rotating vault wheel */
+.vault-wheel-spin {
+  transform-origin: 120px 120px;
+  animation: vault-wheel-spin 16s linear infinite;
+}
+@keyframes vault-wheel-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* Stagger helpers */
 .anim-delay-1{animation-delay:0.1s} .anim-delay-2{animation-delay:0.2s}
 .anim-delay-3{animation-delay:0.3s} .anim-delay-4{animation-delay:0.4s}

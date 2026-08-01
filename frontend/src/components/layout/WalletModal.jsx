@@ -7,7 +7,7 @@ export default function WalletModal({ open, onClose, onConnect }) {
       <div className="modal">
         <button className="modal-close" onClick={onClose}>×</button>
         <div style={{ textAlign:'center', marginBottom:28 }}>
-          <div style={{ width:64,height:64,background:'linear-gradient(135deg,#4F7DFF,#8B5CF6)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,margin:'0 auto 16px' }}>🔐</div>
+          <div style={{ width:64,height:64,background:'linear-gradient(135deg,#FFD166,#D4A017)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,margin:'0 auto 16px' }}>🔐</div>
           <div className="modal-title">Connect Wallet</div>
           <div className="modal-sub">Connect your wallet to access your Legacy Vault on Flare Coston2</div>
         </div>

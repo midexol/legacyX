@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet } from '../components/wallet/WalletProvider';
+import { useVaultData } from '../components/wallet/VaultDataProvider';
 import { useToast } from '../components/ui/Toast';
+import Icn from '../components/ui/Icon';
 import useReveal from '../hooks/useReveal';
 
 const STEPS = ['Choose Asset','Deposit Amount','Beneficiaries','Conditions','Review & Deploy'];
@@ -13,20 +15,21 @@ const ASSETS = [
 ];
 
 const CONDITIONS = [
-  { id:'inactivity', title:'Inactivity Timer',  icon:'⏱️', desc:'Vault unlocks if no wallet activity is recorded for your chosen duration.' },
-  { id:'guardian',   title:'Guardian Approval', icon:'👥', desc:'2 of 3 trusted guardians must approve the claim request.' },
-  { id:'date',       title:'Time-lock Date',    icon:'📅', desc:'Vault releases automatically on a specific future date.' },
+  { id:'inactivity', icon:'clock',    title:'Inactivity Timer',  desc:'Vault unlocks if no wallet activity is recorded for your chosen duration.' },
+  { id:'guardian',   icon:'users',    title:'Guardian Approval', desc:'2 of 3 trusted guardians must approve the claim request.' },
+  { id:'date',       icon:'calendar', title:'Time-lock Date',    desc:'Vault releases automatically on a specific future date.' },
 ];
 
 export default function CreateVault() {
   const { isConnected, connect, account } = useWallet();
+  const { createVault } = useVaultData();
   const toast = useToast();
   const pageRef = useReveal();
 
   const [step, setStep]       = useState(0);
   const [asset, setAsset]     = useState('FXRP');
   const [amount, setAmount]   = useState('');
-  const [benes, setBenes]     = useState([{ name:'', addr:'', pct:'' }]);
+  const [benes, setBenes]     = useState([{ name:'', addr:'', pct:'', email:'' }]);
   const [cond, setCond]       = useState('inactivity');
   const [months, setMonths]   = useState(12);
   const [unlockDate, setUnlockDate] = useState('');
@@ -54,7 +57,7 @@ export default function CreateVault() {
   const prev = () => setStep(s => Math.max(s-1, 0));
 
   const updateBene = (i,f,v) => setBenes(b => b.map((r,idx) => idx===i?{...r,[f]:v}:r));
-  const addBene    = () => setBenes(b => [...b, {name:'',addr:'',pct:''}]);
+  const addBene    = () => setBenes(b => [...b, {name:'',addr:'',pct:'',email:''}]);
   const removeBene = i => setBenes(b => b.filter((_,idx) => idx!==i));
 
   const deploy = async () => {
@@ -64,10 +67,30 @@ export default function CreateVault() {
     try {
       const tx = await window.ethereum.request({
         method:'eth_sendTransaction',
-        params:[{ from:account, to:account, value:'0x0', data:'0x4c656761637958', gas:'0x5208' }]
+        params:[{ from:account, to:account, value:'0x0' }]
       });
       await new Promise(r => setTimeout(r,2000));
-      setTxHash(tx || '0x'+Math.random().toString(16).slice(2,42));
+      const hash = tx || '0x'+Math.random().toString(16).slice(2,42);
+      setTxHash(hash);
+
+      const condMeta = CONDITIONS.find(c => c.id === cond);
+      const conditionLabel = cond === 'inactivity'
+        ? `Inactivity timer set to ${months} months`
+        : cond === 'date'
+        ? `Time-lock set for ${unlockDate || 'a future date'}`
+        : 'Guardian approval (2 of 3) required';
+
+      createVault({
+        asset,
+        amount,
+        condition: cond,
+        conditionLabel,
+        conditionIcon: condMeta?.icon || 'lock',
+        months, unlockDate, guardians,
+        beneficiaries: benes,
+        txHash: hash,
+      });
+
       setDeployed(true);
       toast('Vault Deployed!', 'Your Legacy Vault is live on Flare Coston2!', 'success');
     } catch(e) {
@@ -106,17 +129,16 @@ export default function CreateVault() {
         </div>
 
         {/* Step progress */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', marginBottom:48, gap:0, flexWrap:'wrap' }}>
+        <div className="step-indicator">
           {STEPS.map((s,i) => (
             <React.Fragment key={s}>
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-                <div style={{ width:40,height:40,borderRadius:'50%',border:`2px solid ${i<step?'var(--green)':i===step?'var(--blue)':'var(--border-card)'}`,background:i<step?'var(--green)':i===step?'rgba(79,125,255,0.15)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:i<step?'#050505':i===step?'var(--blue)':'var(--text-muted)',transition:'all 0.3s ease' }}>
+                <div className="step-circle" style={{ borderColor:i<step?'var(--green)':i===step?'var(--blue)':'var(--border-card)', background:i<step?'var(--green)':i===step?'rgba(212,160,23,0.15)':'transparent', color:i<step?'#050505':i===step?'var(--blue)':'var(--text-muted)' }}>
                   {i<step?'✓':(i+1)}
                 </div>
-                <div style={{ fontSize:11,fontWeight:600,color:i===step?'var(--blue)':'var(--text-muted)',whiteSpace:'nowrap',display:'none' }}>{s}</div>
               </div>
               {i < STEPS.length-1 && (
-                <div style={{ width:60,height:2,background:i<step?'var(--green)':'var(--border-subtle)',transition:'background 0.3s ease',margin:'0 8px' }} />
+                <div className="step-connector" style={{ background:i<step?'var(--green)':'var(--border-subtle)' }} />
               )}
             </React.Fragment>
           ))}
@@ -128,14 +150,14 @@ export default function CreateVault() {
             <h2 style={{ fontSize:24,fontWeight:700,marginBottom:24 }}>{STEPS[step]}</h2>
 
             {step === 0 && (
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
+              <div className="asset-grid">
                 {ASSETS.map(a => (
                   <button key={a.id}
                     onClick={() => setAsset(a.id)}
                     id={`asset-${a.id.toLowerCase()}`}
-                    style={{ background: asset===a.id?`rgba(79,125,255,0.1)`:'var(--bg-card)', border:`2px solid ${asset===a.id?'var(--blue)':'var(--border-card)'}`, borderRadius:'var(--radius-md)', padding:24, textAlign:'center', cursor:'pointer', transition:'all 0.2s ease', display:'flex', flexDirection:'column', gap:8, alignItems:'center' }}>
+                    style={{ background: asset===a.id?`rgba(212,160,23,0.1)`:'var(--bg-card)', border:`2px solid ${asset===a.id?'var(--blue)':'var(--border-card)'}`, borderRadius:'var(--radius-md)', padding:24, textAlign:'center', cursor:'pointer', transition:'all 0.2s ease', display:'flex', flexDirection:'column', gap:8, alignItems:'center', color:'var(--text-primary)' }}>
                     <span style={{ fontSize:28, color:a.color }}>{a.icon}</span>
-                    <span style={{ fontWeight:700, fontSize:16 }}>{a.name}</span>
+                    <span style={{ fontWeight:700, fontSize:16, color:'var(--text-primary)' }}>{a.name}</span>
                     <span style={{ fontSize:12, color:'var(--text-muted)' }}>{a.sub}</span>
                   </button>
                 ))}
@@ -165,23 +187,29 @@ export default function CreateVault() {
             {step === 2 && (
               <div>
                 {benes.map((b,i) => (
-                  <div key={i} style={{ display:'grid',gridTemplateColumns:'1fr 1.6fr 60px 28px',gap:8,marginBottom:12,alignItems:'end' }}>
-                    <div className="input-group">
-                      {i===0&&<label className="input-label">Name</label>}
-                      <input className="input" placeholder="Name" value={b.name} onChange={e=>updateBene(i,'name',e.target.value)} style={{ padding:'10px 12px',fontSize:13 }} />
+                  <div key={i} style={{ border:'1px solid var(--border-subtle)', borderRadius:'var(--radius-md)', padding:14, marginBottom:12 }}>
+                    <div className="bene-row" style={{ marginBottom:8 }}>
+                      <div className="input-group">
+                        {i===0&&<label className="input-label">Name</label>}
+                        <input className="input" placeholder="Name" value={b.name} onChange={e=>updateBene(i,'name',e.target.value)} style={{ padding:'10px 12px',fontSize:13 }} />
+                      </div>
+                      <div className="input-group">
+                        {i===0&&<label className="input-label">Wallet (0x…)</label>}
+                        <input className="input" placeholder="0x..." value={b.addr} onChange={e=>updateBene(i,'addr',e.target.value)} style={{ padding:'10px 12px',fontSize:12,fontFamily:'monospace' }} />
+                      </div>
+                      <div className="input-group">
+                        {i===0&&<label className="input-label">%</label>}
+                        <input className="input" type="number" placeholder="%" value={b.pct} onChange={e=>updateBene(i,'pct',e.target.value)} style={{ padding:'10px 8px',fontSize:13,textAlign:'center' }} max="100" min="0" />
+                      </div>
+                      <div style={{ display:'flex',alignItems:i===0?'flex-end':'center',paddingBottom:i===0?0:0 }}>
+                        {benes.length>1&&(
+                          <button onClick={()=>removeBene(i)} style={{ width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',background:'none',border:'1px solid var(--border-card)',borderRadius:'var(--radius-sm)',color:'var(--danger)',fontSize:16,cursor:'pointer' }}>×</button>
+                        )}
+                      </div>
                     </div>
                     <div className="input-group">
-                      {i===0&&<label className="input-label">Wallet (0x…)</label>}
-                      <input className="input" placeholder="0x..." value={b.addr} onChange={e=>updateBene(i,'addr',e.target.value)} style={{ padding:'10px 12px',fontSize:12,fontFamily:'monospace' }} />
-                    </div>
-                    <div className="input-group">
-                      {i===0&&<label className="input-label">%</label>}
-                      <input className="input" type="number" placeholder="%" value={b.pct} onChange={e=>updateBene(i,'pct',e.target.value)} style={{ padding:'10px 8px',fontSize:13,textAlign:'center' }} max="100" min="0" />
-                    </div>
-                    <div style={{ display:'flex',alignItems:i===0?'flex-end':'center',paddingBottom:i===0?0:0 }}>
-                      {benes.length>1&&(
-                        <button onClick={()=>removeBene(i)} style={{ width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',background:'none',border:'1px solid var(--border-card)',borderRadius:'var(--radius-sm)',color:'var(--danger)',fontSize:16,cursor:'pointer' }}>×</button>
-                      )}
+                      {i===0&&<label className="input-label">Email (optional — for unlock notification)</label>}
+                      <input className="input" type="email" placeholder="name@email.com" value={b.email} onChange={e=>updateBene(i,'email',e.target.value)} style={{ padding:'10px 12px',fontSize:13 }} />
                     </div>
                   </div>
                 ))}
@@ -189,9 +217,15 @@ export default function CreateVault() {
                 <div style={{ height:4,background:'var(--border-card)',borderRadius:2,overflow:'hidden',marginBottom:8 }}>
                   <div style={{ height:'100%',background:Math.round(totalPct)===100?'var(--green)':'var(--blue)',borderRadius:2,width:`${Math.min(totalPct,100)}%`,transition:'width 0.4s ease' }} />
                 </div>
-                <p style={{ fontSize:13,color:Math.round(totalPct)===100?'var(--green)':'var(--text-muted)' }}>
+                <p style={{ fontSize:13,color:Math.round(totalPct)===100?'var(--green)':'var(--text-muted)', marginBottom:16 }}>
                   {totalPct.toFixed(0)}% allocated {Math.round(totalPct)===100?'✓':`— need ${(100-totalPct).toFixed(0)}% more`}
                 </p>
+                <div style={{ display:'flex', gap:12, alignItems:'flex-start', padding:14, background:'var(--bg-card)', border:'1px solid var(--border-card)', borderRadius:'var(--radius-md)' }}>
+                  <div style={{ color:'var(--gold)', flexShrink:0, marginTop:1 }}><Icn name="bell" size={18} /></div>
+                  <p style={{ fontSize:12.5, color:'var(--text-secondary)', lineHeight:1.6 }}>
+                    If a beneficiary doesn't have a wallet yet, add their email above. When the vault unlocks, we'll send them onboarding instructions to set one up and claim their share — no crypto knowledge required beforehand.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -200,12 +234,13 @@ export default function CreateVault() {
                 {CONDITIONS.map(c => (
                   <button key={c.id} onClick={()=>setCond(c.id)}
                     id={`cond-${c.id}`}
-                    style={{ display:'flex',alignItems:'flex-start',gap:16,width:'100%',background:cond===c.id?'rgba(79,125,255,0.08)':'var(--bg-card)',border:`1px solid ${cond===c.id?'var(--blue)':'var(--border-card)'}`,borderRadius:'var(--radius-md)',padding:20,cursor:'pointer',textAlign:'left',marginBottom:12,transition:'all 0.2s ease' }}>
-                    <div style={{ width:22,height:22,borderRadius:'50%',border:`2px solid ${cond===c.id?'var(--blue)':'var(--border-card)'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:2,fontSize:11,color:cond===c.id?'var(--blue)':'transparent' }}>
-                      {cond===c.id?'✓':''}
+                    style={{ display:'flex',alignItems:'flex-start',gap:16,width:'100%',background:cond===c.id?'rgba(212,160,23,0.08)':'var(--bg-card)',border:`1px solid ${cond===c.id?'var(--blue)':'var(--border-card)'}`,borderRadius:'var(--radius-md)',padding:20,cursor:'pointer',textAlign:'left',marginBottom:12,transition:'all 0.2s ease',color:'var(--text-primary)' }}>
+                    <div style={{ width:22,height:22,borderRadius:'50%',border:`2px solid ${cond===c.id?'var(--blue)':'var(--border-card)'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:2,color:cond===c.id?'var(--blue)':'transparent' }}>
+                      {cond===c.id?<Icn name="check" size={12} />:''}
                     </div>
+                    <div style={{ color:'var(--gold)', flexShrink:0, marginTop:1 }}><Icn name={c.icon} size={20} /></div>
                     <div>
-                      <div style={{ fontWeight:700,marginBottom:4 }}>{c.icon} {c.title}</div>
+                      <div style={{ fontWeight:700,marginBottom:4,color:'var(--text-primary)' }}>{c.title}</div>
                       <div style={{ fontSize:13,color:'var(--text-secondary)',lineHeight:1.5 }}>{c.desc}</div>
                     </div>
                   </button>
@@ -247,7 +282,7 @@ export default function CreateVault() {
                     <span style={{ fontWeight:500,textAlign:'right' }}>{r.val}</span>
                   </div>
                 ))}
-                <div style={{ marginTop:20,padding:16,background:'rgba(79,125,255,0.06)',border:'1px solid rgba(79,125,255,0.15)',borderRadius:'var(--radius-md)',fontSize:13,color:'var(--text-secondary)',lineHeight:1.6 }}>
+                <div style={{ marginTop:20,padding:16,background:'rgba(212,160,23,0.06)',border:'1px solid rgba(212,160,23,0.15)',borderRadius:'var(--radius-md)',fontSize:13,color:'var(--text-secondary)',lineHeight:1.6 }}>
                   Once deployed, the vault configuration is permanent on-chain.
                 </div>
               </div>

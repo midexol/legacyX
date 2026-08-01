@@ -87,6 +87,13 @@
   --shadow-card:   0 8px 32px rgba(0, 0, 0, 0.5);
 
   --bg-elevated: #0D0D10;
+  --card-sheen: rgba(255,255,255,0.04);
+  --card-hover-border: rgba(255,255,255,0.15);
+  --tint-1: rgba(255,255,255,0.04);
+  --tint-2: rgba(255,255,255,0.06);
+  --tint-3: rgba(255,255,255,0.10);
+  --tint-4: rgba(255,255,255,0.15);
+  --tint-5: rgba(255,255,255,0.25);
   --noise-opacity: 0.4;
 }
 
@@ -94,25 +101,32 @@
    LIGHT THEME
    ============================================================ */
 [data-theme='light'] {
-  --bg-primary:    #F8F5EE;
-  --bg-secondary:  #F1ECDF;
-  --bg-card:       rgba(20, 14, 4, 0.035);
-  --bg-card-hover: rgba(20, 14, 4, 0.06);
-  --bg-glass:      rgba(248, 245, 238, 0.85);
+  --bg-primary:    #F7F3EA;
+  --bg-secondary:  #EFE8D8;
+  --bg-card:       #FFFFFF;
+  --bg-card-hover: #FFFDF7;
+  --bg-glass:      rgba(247, 243, 234, 0.9);
 
-  --text-primary:   #211A0E;
-  --text-secondary: rgba(33, 26, 14, 0.65);
-  --text-muted:     rgba(33, 26, 14, 0.4);
+  --text-primary:   #201808;
+  --text-secondary: rgba(32, 24, 8, 0.68);
+  --text-muted:     rgba(32, 24, 8, 0.45);
 
-  --border-subtle: rgba(33, 26, 14, 0.08);
-  --border-card:   rgba(184, 115, 51, 0.18);
-  --border-glow:   rgba(184, 115, 51, 0.5);
+  --border-subtle: rgba(32, 24, 8, 0.12);
+  --border-card:   rgba(32, 24, 8, 0.14);
+  --border-glow:   rgba(184, 115, 51, 0.55);
 
-  --shadow-blue:   0 0 40px rgba(212, 160, 23, 0.18);
-  --shadow-purple: 0 0 40px rgba(184, 115, 51, 0.15);
-  --shadow-gold:   0 0 32px rgba(184, 115, 51, 0.22);
-  --shadow-card:   0 8px 32px rgba(80, 60, 20, 0.12);
+  --shadow-blue:   0 4px 24px rgba(212, 160, 23, 0.14);
+  --shadow-purple: 0 4px 24px rgba(184, 115, 51, 0.12);
+  --shadow-gold:   0 4px 24px rgba(184, 115, 51, 0.18);
+  --shadow-card:   0 4px 20px rgba(60, 45, 15, 0.10), 0 1px 3px rgba(60,45,15,0.08);
 
-  --bg-elevated: #FFFDF8;
-  --noise-opacity: 0.15;
+  --bg-elevated: #FFFFFF;
+  --card-sheen: rgba(32,24,8,0.025);
+  --card-hover-border: rgba(32,24,8,0.24);
+  --tint-1: rgba(32,24,8,0.035);
+  --tint-2: rgba(32,24,8,0.05);
+  --tint-3: rgba(32,24,8,0.08);
+  --tint-4: rgba(32,24,8,0.14);
+  --tint-5: rgba(32,24,8,0.28);
+  --noise-opacity: 0.08;
 }

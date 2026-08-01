@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useWallet } from '../wallet/WalletProvider';
 import ThemeToggle from '../theme/ThemeToggle';
 import WalletModal from './WalletModal';
@@ -7,6 +7,8 @@ import '../../styles/components.css';
 
 export default function Navbar() {
   const { isConnected, account, connect, disconnect, shorten } = useWallet();
+  const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard';
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -55,9 +57,10 @@ export default function Navbar() {
                   className="btn-connect connected"
                   onClick={disconnect}
                   id="nav-wallet-btn"
+                  title={isDashboard ? account : 'Wallet connected'}
                 >
                   <span style={{ width:8,height:8,borderRadius:'50%',background:'#00D68F',display:'inline-block',boxShadow:'0 0 8px #00D68F' }} />
-                  {shorten(account)}
+                  {isDashboard ? shorten(account) : 'Connected'}
                 </button>
               ) : (
                 <button

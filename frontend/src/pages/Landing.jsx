@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import useReveal from '../hooks/useReveal';
 import VaultGlyph from '../components/background/VaultGlyph';
+import HeroBackground from '../components/background/HeroBackground';
 
 const FEATURES = [
   { icon:'🔐', title:'Legacy Vault',       desc:'Deposit your FXRP into a secure smart contract vault. Only you control the keys — we never touch your assets.',  tag:'→ Smart Contract Secured', color:'rgba(212,160,23,0.08)',  glow:'rgba(212,160,23,0.25)',   textColor:'var(--gold)'   },
@@ -44,93 +45,88 @@ export default function Landing() {
     <div ref={pageRef}>
 
       {/* ── HERO ── */}
-      <section className="page-content" style={{
-        paddingTop: 'calc(var(--navbar-h) + 60px)',
-        paddingBottom: 80,
-        textAlign: 'center',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
+      <section className="page-content hero-section" style={{
+        paddingTop: 'var(--navbar-h)',
+        paddingBottom: 0,
+        overflow: 'hidden',
+        position: 'relative',
       }}>
-        <div className="container">
 
-          {/* Badge */}
-          <div style={{ display:'flex', justifyContent:'center', marginBottom:28 }}>
-            <div className="badge badge-gold">
+        <HeroBackground />
+
+        <div className="container hero-grid">
+
+          {/* ── Left: content ── */}
+          <div className="hero-content">
+            <div className="badge badge-gold" style={{ marginBottom:28 }}>
               <span className="badge-dot" style={{ background:'var(--gold)', boxShadow:'0 0 8px var(--gold)' }} />
               Built on Flare Coston2 — Testnet Live
             </div>
-          </div>
 
-          {/* Headline */}
-          <h1 style={{
-            fontSize: 'clamp(44px, 7vw, 88px)',
-            fontWeight: 800,
-            lineHeight: 1.05,
-            letterSpacing: '-0.03em',
-            marginBottom: 24,
-          }}>
-            <span style={{ display:'block' }}>Protect Your Crypto.</span>
-            <span style={{
-              display: 'block',
-              background: 'var(--grad-gold)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+            <h1 style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'clamp(34px, 4.4vw, 58px)',
+              fontWeight: 600,
+              lineHeight: 1.1,
+              letterSpacing: '-0.01em',
+              marginBottom: 20,
             }}>
-              Protect Your Family.
-            </span>
-          </h1>
+              <span style={{ display:'block' }}>Protect your crypto.</span>
+              <span style={{
+                display: 'block',
+                fontStyle: 'italic',
+                background: 'var(--grad-gold)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                Protect your family.
+              </span>
+            </h1>
 
-          <p style={{
-            color: 'var(--text-secondary)',
-            fontSize: 'clamp(15px,1.4vw,18px)',
-            lineHeight: 1.75,
-            maxWidth: 580,
-            margin: '0 auto 40px',
-          }}>
-            LegacyX is the first on-chain crypto inheritance platform. Create a Legacy Vault,
-            assign beneficiaries, and ensure your digital assets are never lost — even if the
-            unexpected happens.
-          </p>
+            <p className="hero-lead" style={{
+              color: 'var(--text-secondary)',
+              fontSize: 'clamp(14px,1.2vw,16px)',
+              lineHeight: 1.7,
+              maxWidth: 420,
+              marginBottom: 32,
+            }}>
+              LegacyX is the first on-chain crypto inheritance platform. Create a Legacy Vault,
+              assign beneficiaries, and ensure your digital assets are never lost — even if the
+              unexpected happens.
+            </p>
 
-          {/* CTAs */}
-          <div style={{ display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center', marginBottom:72 }}>
-            <Link to="/vault"      className="btn btn-gold btn-lg"   id="hero-create-btn">⬡ Create Vault</Link>
-            <a    href="#how-it-works" className="btn btn-ghost btn-lg">Explore ↓</a>
+            <div className="hero-cta-row" style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:28 }}>
+              <Link to="/vault"      className="btn btn-gold btn-lg"   id="hero-create-btn">⬡ Create Vault</Link>
+              <a    href="#how-it-works" className="btn btn-ghost btn-lg">Explore ↓</a>
+            </div>
+
+            <div className="hero-caption">
+              <span className="hero-caption-line" aria-hidden="true" />
+              Securing digital legacies since 2025
+            </div>
           </div>
 
-          {/* ── VAULT GLYPH — abstract, blended into the background ── */}
-          <div style={{
-            position: 'relative',
-            display: 'inline-block',
-            maxWidth: 620,
-            width: '100%',
-            margin: '0 auto 56px',
-          }}>
-            {/* Glow halo, sits behind and bleeds into the page background */}
-            <div style={{
-              position: 'absolute',
-              inset: '5%',
-              borderRadius: '50%',
-              background: 'radial-gradient(ellipse, rgba(255,209,102,0.18) 0%, transparent 72%)',
-              filter: 'blur(60px)',
-              zIndex: 0,
-              animation: 'pulse-glow-gold 4s ease-in-out infinite',
-            }} aria-hidden="true" />
+          {/* ── Right: side list + vault glyph ── */}
+          <div className="hero-visual">
+            <div className="hero-side-list">
+              <div className="hero-side-list-label">Assets supported</div>
+              {['FXRP', 'FLR', 'C2FLR'].map(a => (
+                <div key={a} className="hero-side-list-item">{a}</div>
+              ))}
+            </div>
 
-            <VaultGlyph
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                width: '100%',
-                height: 'auto',
-                animation: 'float-slow 7s ease-in-out infinite',
-              }}
-            />
+            <div className="hero-glyph-wrap">
+              <VaultGlyph className="hero-glyph" />
+            </div>
           </div>
 
-          {/* Stats */}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="page-content" style={{ padding:'var(--space-8) 0 var(--space-9)' }}>
+        <div className="container">
           <div className="stats-grid">
             {[
               { val:2.4,  prefix:'$', suffix:'B+', label:'Crypto Lost Forever'       },
@@ -146,7 +142,6 @@ export default function Landing() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
@@ -208,7 +203,7 @@ export default function Landing() {
       {/* ── OTC SECTION ── */}
       <section className="page-content" id="otc" style={{ padding:'var(--space-10) 0' }}>
         <div className="container">
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:64, alignItems:'center' }}>
+          <div className="otc-section-grid">
             <div className="reveal-left" style={{ textAlign:'left' }}>
               <div className="section-eyebrow" style={{ marginBottom:16 }}>✦ Private OTC Marketplace</div>
               <h2 className="text-h1" style={{ marginBottom:16 }}>
@@ -280,16 +275,33 @@ export default function Landing() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="page-content" style={{ borderTop:'1px solid var(--border-subtle)', padding:'32px 0' }}>
+      <footer className="page-content" style={{ borderTop:'1px solid var(--border-subtle)', padding:'48px 0 32px' }}>
         <div className="container">
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
-            <div style={{ fontWeight:800, fontSize:18, background:'var(--grad-gold)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>LegacyX</div>
-            <div style={{ display:'flex', gap:32 }}>
-              {[{to:'/vault',label:'Vault'},{to:'/marketplace',label:'Marketplace'},{to:'/dashboard',label:'Dashboard'},{to:'/unlock',label:'Demo Unlock'}].map(l => (
-                <Link key={l.to} to={l.to} style={{ fontSize:14, color:'var(--text-muted)', transition:'color 0.15s' }}>{l.label}</Link>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:32, marginBottom:32 }}>
+            <div style={{ maxWidth:320 }}>
+              <div style={{ fontFamily:'var(--font-heading)', fontWeight:600, fontSize:20, background:'var(--grad-gold)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', marginBottom:10 }}>LegacyX</div>
+              <p style={{ fontSize:13.5, color:'var(--text-muted)', lineHeight:1.7, marginBottom:12 }}>
+                On-chain crypto inheritance, secured by smart contracts — not custodians. Built on Flare.
+              </p>
+              <Link to="/dashboard-demo" style={{ fontSize:13, color:'var(--gold)', fontWeight:600 }}>Preview a demo dashboard →</Link>
+            </div>
+
+            <div style={{ display:'flex', gap:12 }}>
+              {[
+                { label:'X', href:'#', d:'M18.9 3H22l-7.6 8.7L23 21h-6.8l-5.3-6.9L4.8 21H1.6l8.1-9.3L1 3h7l4.8 6.3L18.9 3Zm-1.2 16.2h1.9L7.5 4.7H5.5l12.2 14.5Z' },
+                { label:'GitHub', href:'#', d:'M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z' },
+                { label:'Discord', href:'#', d:'M20 5.4A17.6 17.6 0 0 0 15.6 4l-.22.4a12.9 12.9 0 0 1 3.9 1.5 14.5 14.5 0 0 0-15 0 12.9 12.9 0 0 1 3.9-1.5L8 4a17.6 17.6 0 0 0-4.4 1.4C1 10 .3 14.5.6 19a17.7 17.7 0 0 0 5.4 2.7l.7-1.2a11.3 11.3 0 0 1-1.8-.9l.4-.3a12.6 12.6 0 0 0 10.2 0l.4.3a11.3 11.3 0 0 1-1.8.9l.7 1.2A17.6 17.6 0 0 0 20.1 19c.4-5.2-.8-9.6-3.1-13.6ZM8.6 15.9c-.9 0-1.7-.9-1.7-2s.7-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Zm6.8 0c-.9 0-1.7-.9-1.7-2s.7-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Z' },
+              ].map(s => (
+                <a key={s.label} href={s.href} aria-label={s.label} className="footer-social">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d={s.d} /></svg>
+                </a>
               ))}
             </div>
-            <div style={{ fontSize:13, color:'var(--text-muted)' }}>Built on Flare Coston2 · © 2025 LegacyX</div>
+          </div>
+
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12, paddingTop:20, borderTop:'1px solid var(--border-subtle)' }}>
+            <div style={{ fontSize:12.5, color:'var(--text-muted)' }}>© 2025 LegacyX. Testnet demo — not audited, not for mainnet funds.</div>
+            <div style={{ fontSize:12.5, color:'var(--text-muted)' }}>Built on Flare Coston2</div>
           </div>
         </div>
       </footer>

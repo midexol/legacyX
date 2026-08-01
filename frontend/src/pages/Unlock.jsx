@@ -36,7 +36,7 @@ export default function Unlock() {
       pts.forEach(p => { p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.014;
         if(p.alpha<=0) return;
         ctx.globalAlpha=p.alpha; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle='#4F7DFF'; ctx.shadowColor='#4F7DFF'; ctx.shadowBlur=8; ctx.fill();
+        ctx.fillStyle='#D4A017'; ctx.shadowColor='#D4A017'; ctx.shadowBlur=8; ctx.fill();
       });
       ctx.globalAlpha=1; ctx.shadowBlur=0;
       if(running) requestAnimationFrame(tick);
@@ -89,14 +89,14 @@ export default function Unlock() {
       {stage === 'vault' && (
         <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:32,textAlign:'center' }}>
           <div style={{ fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--blue)',opacity:0.7 }}>Verifying Inheritance Conditions…</div>
-          <div style={{ width:180,height:180,borderRadius:'50%',border:`2px solid ${vaultLit?'rgba(79,125,255,0.5)':'var(--border-card)'}`,display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg-card)',transition:'all 1s ease',boxShadow:vaultLit?'0 0 60px rgba(79,125,255,0.2),inset 0 0 40px rgba(79,125,255,0.08)':'none',position:'relative',overflow:'hidden' }}>
+          <div style={{ width:180,height:180,borderRadius:'50%',border:`2px solid ${vaultLit?'rgba(212,160,23,0.5)':'var(--border-card)'}`,display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg-card)',transition:'all 1s ease',boxShadow:vaultLit?'0 0 60px rgba(212,160,23,0.2),inset 0 0 40px rgba(212,160,23,0.08)':'none',position:'relative',overflow:'hidden' }}>
             {!doorsOpen ? (
               <div style={{ width:80,height:80,borderRadius:'50%',border:'1.5px solid var(--border-card)',display:'flex',alignItems:'center',justifyContent:'center',animation:'spin 8s linear infinite' }}>
                 <div style={{ width:40,height:40,borderRadius:'50%',border:'1px solid var(--border-subtle)' }} />
               </div>
             ) : (
               <>
-                <div style={{ position:'absolute',width:2,height:'100%',background:'linear-gradient(to bottom,transparent,rgba(79,125,255,0.6),transparent)',animation:'float-slow 1.5s ease forwards' }} />
+                <div style={{ position:'absolute',width:2,height:'100%',background:'linear-gradient(to bottom,transparent,rgba(212,160,23,0.6),transparent)',animation:'float-slow 1.5s ease forwards' }} />
                 <span style={{ fontSize:72,animation:'fade-in 0.5s ease both' }}>🔓</span>
               </>
             )}

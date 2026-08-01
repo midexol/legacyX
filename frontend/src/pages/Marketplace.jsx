@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useWallet } from '../components/wallet/WalletProvider';
 import { useToast } from '../components/ui/Toast';
+import Icn from '../components/ui/Icon';
 import useReveal from '../hooks/useReveal';
 
 const TRADES = [
@@ -39,17 +40,17 @@ export default function Marketplace() {
       for (let i=0;i<80;i++) { p += (Math.random()-0.49)*0.004; p=Math.max(0.44,Math.min(0.62,p)); data.push(p); }
       const min=Math.min(...data),max=Math.max(...data),range=max-min||0.01;
       const toY = v => H*0.1+((max-v)/range)*(H*0.8);
-      ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+      ctx.strokeStyle='rgba(150,130,90,0.15)'; ctx.lineWidth=1;
       for(let i=1;i<5;i++){const y=(H/5)*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
       const grad=ctx.createLinearGradient(0,0,0,H);
-      grad.addColorStop(0,'rgba(79,125,255,0.15)'); grad.addColorStop(1,'rgba(79,125,255,0)');
+      grad.addColorStop(0,'rgba(212,160,23,0.15)'); grad.addColorStop(1,'rgba(212,160,23,0)');
       ctx.beginPath(); ctx.moveTo(0,H);
       data.forEach((v,i)=>{const x=(i/(data.length-1))*W; i===0?ctx.lineTo(x,toY(v)):ctx.lineTo(x,toY(v));});
       ctx.lineTo(W,H); ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
-      ctx.beginPath(); ctx.strokeStyle='#4F7DFF'; ctx.lineWidth=2; ctx.lineJoin='round';
+      ctx.beginPath(); ctx.strokeStyle='#D4A017'; ctx.lineWidth=2; ctx.lineJoin='round';
       data.forEach((v,i)=>{const x=(i/(data.length-1))*W; i===0?ctx.moveTo(x,toY(v)):ctx.lineTo(x,toY(v));});
       ctx.stroke();
-      ctx.beginPath(); ctx.arc(W,toY(data[data.length-1]),5,0,Math.PI*2); ctx.fillStyle='#4F7DFF'; ctx.fill();
+      ctx.beginPath(); ctx.arc(W,toY(data[data.length-1]),5,0,Math.PI*2); ctx.fillStyle='#FFD166'; ctx.fill();
     };
     draw();
     window.addEventListener('resize', draw);
@@ -84,7 +85,7 @@ export default function Marketplace() {
         {/* Header */}
         <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:40,flexWrap:'wrap',gap:16 }}>
           <div>
-            <div className="section-eyebrow" style={{ marginBottom:12 }}>🔒 Private OTC Marketplace</div>
+            <div className="section-eyebrow" style={{ marginBottom:12, display:'flex', alignItems:'center', gap:6 }}><Icn name="lock" size={14} /> Private OTC Marketplace</div>
             <h1 style={{ fontSize:'clamp(28px,4vw,44px)',fontWeight:800,letterSpacing:'-0.03em',marginBottom:8 }}>Private OTC Marketplace</h1>
             <p style={{ color:'var(--text-secondary)',fontSize:15,maxWidth:560 }}>Sell inherited assets privately. Identities and amounts concealed until settlement.</p>
           </div>
@@ -95,8 +96,8 @@ export default function Marketplace() {
         </div>
 
         {/* Privacy notice */}
-        <div style={{ background:'rgba(79,125,255,0.06)',border:'1px solid rgba(79,125,255,0.15)',borderRadius:'var(--radius-md)',padding:'16px 20px',marginBottom:32,display:'flex',gap:16,alignItems:'flex-start' }}>
-          <span style={{ fontSize:20 }}>🛡️</span>
+        <div style={{ background:'rgba(212,160,23,0.06)',border:'1px solid rgba(212,160,23,0.15)',borderRadius:'var(--radius-md)',padding:'16px 20px',marginBottom:32,display:'flex',gap:16,alignItems:'flex-start' }}>
+          <span style={{ color:'var(--gold)', flexShrink:0, marginTop:2 }}><Icn name="shield" size={20} /></span>
           <div>
             <div style={{ fontWeight:700,marginBottom:4 }}>Zero-Knowledge Trading</div>
             <div style={{ fontSize:13,color:'var(--text-secondary)' }}>Seller and buyer identities, amounts, and prices remain hidden. Only on-chain settlement is public.</div>
@@ -104,7 +105,7 @@ export default function Marketplace() {
         </div>
 
         {/* Stats row */}
-        <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:1,background:'var(--border-subtle)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-lg)',overflow:'hidden',marginBottom:32 }}>
+        <div className="otc-stats-grid">
           {[
             {label:'FXRP Price',      val:priceStr},
             {label:'24h OTC Volume',  val:'$284K'},
@@ -119,7 +120,7 @@ export default function Marketplace() {
         </div>
 
         {/* Chart + Trades */}
-        <div style={{ display:'grid',gridTemplateColumns:'1fr 340px',gap:24,marginBottom:32 }}>
+        <div className="otc-main-grid">
           <div className="card reveal">
             <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:20 }}>
               <div>
@@ -155,23 +156,37 @@ export default function Marketplace() {
           </div>
         </div>
 
-        {/* Order form */}
+        {/* Listing form — gated behind wallet connection; rest of the marketplace stays public */}
         <div className="card reveal" style={{ marginBottom:32 }}>
           <h2 style={{ fontSize:22,fontWeight:700,marginBottom:8 }}>List a Private Sale</h2>
           <p style={{ color:'var(--text-secondary)',fontSize:14,marginBottom:24 }}>Identity and amount remain hidden throughout the match process.</p>
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20,marginBottom:24 }}>
-            {[
-              { label:'Asset',         node: <select className="input" value={sellAsset} onChange={e=>setSellAsset(e.target.value)} id="otc-asset" style={{ background:'rgba(255,255,255,0.04)' }}><option>FXRP</option><option>FLR</option><option>C2FLR</option></select> },
-              { label:'Amount',        node: <input className="input" type="number" placeholder="0" value={sellAmt} onChange={e=>setSellAmt(e.target.value)} id="otc-amount" /> },
-              { label:'Min Price (USD)',node: <input className="input" type="number" placeholder="0.00" value={minPrice} onChange={e=>setMinPrice(e.target.value)} id="otc-min-price" /> },
-            ].map(f => (
-              <div key={f.label} className="input-group">
-                <label className="input-label">{f.label}</label>
-                {f.node}
+
+          {!isConnected ? (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:16, padding:'32px 16px', background:'var(--bg-secondary)', borderRadius:'var(--radius-md)', border:'1px dashed var(--border-card)' }}>
+              <div style={{ color:'var(--gold)' }}><Icn name="lock" size={26} /></div>
+              <div>
+                <div style={{ fontWeight:700, marginBottom:4 }}>Connect your wallet to list an asset</div>
+                <div style={{ fontSize:13, color:'var(--text-muted)' }}>Browsing trades and prices doesn't require a wallet — only creating a listing does.</div>
               </div>
-            ))}
-          </div>
-          <button className="btn btn-primary" onClick={submitOrder} id="otc-submit-btn">Submit Private Order</button>
+              <button className="btn btn-gold" onClick={connect} id="otc-connect-btn">Connect Wallet</button>
+            </div>
+          ) : (
+            <>
+              <div className="otc-form-grid">
+                {[
+                  { label:'Asset',         node: <select className="input" value={sellAsset} onChange={e=>setSellAsset(e.target.value)} id="otc-asset"><option>FXRP</option><option>FLR</option><option>C2FLR</option></select> },
+                  { label:'Amount',        node: <input className="input" type="number" placeholder="0" value={sellAmt} onChange={e=>setSellAmt(e.target.value)} id="otc-amount" /> },
+                  { label:'Min Price (USD)',node: <input className="input" type="number" placeholder="0.00" value={minPrice} onChange={e=>setMinPrice(e.target.value)} id="otc-min-price" /> },
+                ].map(f => (
+                  <div key={f.label} className="input-group">
+                    <label className="input-label">{f.label}</label>
+                    {f.node}
+                  </div>
+                ))}
+              </div>
+              <button className="btn btn-primary" onClick={submitOrder} id="otc-submit-btn">Submit Private Order</button>
+            </>
+          )}
         </div>
 
         {/* Settlement table */}
