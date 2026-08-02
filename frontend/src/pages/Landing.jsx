@@ -3,20 +3,21 @@ import { Link } from 'react-router-dom';
 import useReveal from '../hooks/useReveal';
 import VaultGlyph from '../components/background/VaultGlyph';
 import HeroBackground from '../components/background/HeroBackground';
+import Icn from '../components/ui/Icon';
 
 const FEATURES = [
-  { icon:'🔐', title:'Legacy Vault',       desc:'Deposit your FXRP into a secure smart contract vault. Only you control the keys — we never touch your assets.',  tag:'→ Smart Contract Secured', color:'rgba(212,160,23,0.08)',  glow:'rgba(212,160,23,0.25)',   textColor:'var(--gold)'   },
-  { icon:'👥', title:'Inheritance Rules',  desc:"Choose your beneficiaries and define exactly when and how your assets are distributed. Complete customization.",   tag:'→ Fully Customizable',     color:'rgba(184,115,51,0.08)',  glow:'rgba(184,115,51,0.25)',   textColor:'var(--gold)'   },
-  { icon:'🔒', title:'Private OTC',        desc:'Beneficiaries can sell inherited assets privately without exposing wallet addresses, amounts, or prices on-chain.', tag:'→ Zero Knowledge Privacy', color:'rgba(255,209,102,0.08)', glow:'rgba(255,209,102,0.25)',  textColor:'var(--gold)'   },
-  { icon:'⚡', title:'Flare Powered',      desc:"Built on Flare's infrastructure. Verified data feeds, FAssets, and FTSO ensure real-world condition checks.",      tag:'→ FTSO & FAssets',         color:'rgba(0,214,143,0.08)',   glow:'rgba(0,214,143,0.25)',    textColor:'var(--green)'  },
+  { icon:'lock',  title:'Legacy Vault',       desc:'Deposit your FXRP into a secure smart contract vault. Only you control the keys — we never touch your assets.',  tag:'→ Smart Contract Secured', color:'rgba(212,160,23,0.08)',  glow:'rgba(212,160,23,0.25)',   textColor:'var(--gold)'   },
+  { icon:'users', title:'Inheritance Rules',  desc:"Choose your beneficiaries and define exactly when and how your assets are distributed. Complete customization.",   tag:'→ Fully Customizable',     color:'rgba(184,115,51,0.08)',  glow:'rgba(184,115,51,0.25)',   textColor:'var(--gold)'   },
+  { icon:'shield',title:'Private OTC',        desc:'Beneficiaries can sell inherited assets privately without exposing wallet addresses, amounts, or prices on-chain.', tag:'→ Zero Knowledge Privacy', color:'rgba(255,209,102,0.08)', glow:'rgba(255,209,102,0.25)',  textColor:'var(--gold)'   },
+  { icon:'zap',   title:'Flare Powered',      desc:"Built on Flare's infrastructure. Verified data feeds, FAssets, and FTSO ensure real-world condition checks.",      tag:'→ FTSO & FAssets',         color:'rgba(0,214,143,0.08)',   glow:'rgba(0,214,143,0.25)',    textColor:'var(--green)'  },
 ];
 
 const STEPS = [
-  { emoji:'🏦', step:'Step 01', title:'Deposit Your Assets',       desc:'Alice deposits 100 FXRP into her personal Legacy Vault smart contract. The assets are locked securely on-chain — only she can manage them while active.' },
-  { emoji:'👨‍👩‍👧', step:'Step 02', title:'Choose Beneficiaries',     desc:'Alice assigns 50% to her mother, 30% to her brother, and 20% to her daughter by entering their wallet addresses. Allocations must total 100%.' },
-  { emoji:'⏱️', step:'Step 03', title:'Set Inheritance Conditions', desc:'Alice sets her rules: "If I\'m inactive for 12 months, release the vault." Or: "Two trusted guardians must approve." Multiple conditions supported.' },
-  { emoji:'✅', step:'Step 04', title:'Verification & Unlock',      desc:"When conditions are met, the smart contract automatically verifies and unlocks the vault. Flare's data feeds and DECO can verify real-world events." },
-  { emoji:'💸', step:'Step 05', title:'Assets Released',            desc:'Each beneficiary automatically receives their share. No lawyers, no banks, no delays. Optionally, they can sell privately via the OTC marketplace.' },
+  { icon:'wallet', step:'Step 01', title:'Deposit Your Assets',       desc:'Alice deposits 100 FXRP into her personal Legacy Vault smart contract. The assets are locked securely on-chain — only she can manage them while active.' },
+  { icon:'users',  step:'Step 02', title:'Choose Beneficiaries',     desc:'Alice assigns 50% to her mother, 30% to her brother, and 20% to her daughter by entering their wallet addresses. Allocations must total 100%.' },
+  { icon:'clock',  step:'Step 03', title:'Set Inheritance Conditions', desc:'Alice sets her rules: "If I\'m inactive for 12 months, release the vault." Or: "Two trusted guardians must approve." Multiple conditions supported.' },
+  { icon:'check',  step:'Step 04', title:'Verification & Unlock',      desc:"When conditions are met, the smart contract automatically verifies and unlocks the vault. Flare's data feeds and DECO can verify real-world events." },
+  { icon:'coins',  step:'Step 05', title:'Assets Released',            desc:'Each beneficiary automatically receives their share. No lawyers, no banks, no delays. Optionally, they can sell privately via the OTC marketplace.' },
 ];
 
 function Counter({ target, prefix = '', suffix = '', duration = 1800 }) {
@@ -157,7 +158,7 @@ export default function Landing() {
             {FEATURES.map((f, i) => (
               <div key={f.title} className="card reveal-blur" data-delay={i * 100}
                 style={{ background: f.color, borderColor:'rgba(255,209,102,0.1)', textAlign:'center' }}>
-                <div style={{ fontSize:40, marginBottom:16 }}>{f.icon}</div>
+                <div style={{ display:'flex', justifyContent:'center', color:f.textColor, marginBottom:16 }}><Icn name={f.icon} size={34} /></div>
                 <div style={{ fontSize:18, fontWeight:700, marginBottom:12 }}>{f.title}</div>
                 <div className="text-secondary" style={{ fontSize:14, marginBottom:16, lineHeight:1.6 }}>{f.desc}</div>
                 <div style={{ color: f.textColor, fontSize:13, fontWeight:600 }}>{f.tag}</div>
@@ -186,8 +187,8 @@ export default function Landing() {
                     background: 'var(--bg-secondary)',
                     border: '2px solid rgba(255,209,102,0.3)',
                     display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:20, flexShrink:0, zIndex:1,
-                  }}>{s.emoji}</div>
+                    fontSize:20, flexShrink:0, zIndex:1, color:'var(--gold)',
+                  }}><Icn name={s.icon} size={20} /></div>
                   <div style={{ paddingTop:8, textAlign:'left' }}>
                     <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--gold)', marginBottom:6 }}>{s.step}</div>
                     <div style={{ fontSize:20, fontWeight:700, marginBottom:8 }}>{s.title}</div>

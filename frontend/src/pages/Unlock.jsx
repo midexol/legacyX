@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/ui/Toast';
+import Icn from '../components/ui/Icon';
 
 const BENES = [
-  { name:'Mother',   emoji:'👩', amount:'125 FXRP', pct:'50%', color:'var(--blue)'   },
-  { name:'Brother',  emoji:'👦', amount:'75 FXRP',  pct:'30%', color:'var(--purple)' },
-  { name:'Daughter', emoji:'👧', amount:'50 FXRP',  pct:'20%', color:'var(--green)'  },
+  { name:'Mother',   initial:'M', amount:'125 FXRP', pct:'50%', color:'var(--blue)'   },
+  { name:'Brother',  initial:'B', amount:'75 FXRP',  pct:'30%', color:'var(--purple)' },
+  { name:'Daughter', initial:'D', amount:'50 FXRP',  pct:'20%', color:'var(--green)'  },
 ];
 
 export default function Unlock() {
@@ -66,7 +67,7 @@ export default function Unlock() {
 
       {stage === 'idle' && (
         <div style={{ maxWidth:480,width:'100%',background:'var(--bg-card)',border:'1px solid var(--border-card)',borderRadius:'var(--radius-xl)',padding:48,textAlign:'center' }}>
-          <div style={{ fontSize:64,marginBottom:24,animation:'float 3s ease-in-out infinite' }}>🔐</div>
+          <div style={{ display:'flex',justifyContent:'center',color:'var(--gold)',marginBottom:24,animation:'float 3s ease-in-out infinite' }}><Icn name="lock" size={52} /></div>
           <h1 style={{ fontSize:'clamp(28px,4vw,40px)',fontWeight:800,marginBottom:12 }}>Vault Unlock <span style={{ background:'var(--grad-blue-purple)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>Demo</span></h1>
           <p style={{ color:'var(--text-secondary)',fontSize:14,lineHeight:1.7,marginBottom:24 }}>Inheritance conditions have been met for John's Legacy Vault. 250 FXRP is ready to be distributed to 3 beneficiaries.</p>
           <div style={{ background:'rgba(255,209,102,0.08)',border:'1px solid rgba(255,209,102,0.2)',borderRadius:'var(--radius-md)',padding:'14px 20px',textAlign:'left',marginBottom:24 }}>
@@ -81,7 +82,7 @@ export default function Unlock() {
               </div>
             ))}
           </div>
-          <button className="btn btn-primary btn-lg" onClick={run} id="unlock-trigger-btn" style={{ width:'100%',justifyContent:'center' }}>⚡ Execute Vault Unlock</button>
+          <button className="btn btn-primary btn-lg" onClick={run} id="unlock-trigger-btn" style={{ width:'100%',justifyContent:'center', display:'flex', alignItems:'center', gap:8 }}><Icn name="zap" size={16} /> Execute Vault Unlock</button>
           <Link to="/dashboard" style={{ display:'block',marginTop:16,fontSize:13,color:'var(--text-muted)',textAlign:'center' }}>← Back to Dashboard</Link>
         </div>
       )}
@@ -97,7 +98,7 @@ export default function Unlock() {
             ) : (
               <>
                 <div style={{ position:'absolute',width:2,height:'100%',background:'linear-gradient(to bottom,transparent,rgba(212,160,23,0.6),transparent)',animation:'float-slow 1.5s ease forwards' }} />
-                <span style={{ fontSize:72,animation:'fade-in 0.5s ease both' }}>🔓</span>
+                <span style={{ display:'inline-flex', color:'var(--gold)', animation:'fade-in 0.5s ease both' }}><Icn name="unlock" size={56} /></span>
               </>
             )}
           </div>
@@ -111,7 +112,7 @@ export default function Unlock() {
           <div style={{ display:'flex',gap:16,flexWrap:'wrap',justifyContent:'center' }}>
             {BENES.map((b,i) => (
               <div key={b.name} style={{ background:'var(--bg-card)',border:`1px solid ${litCards.includes(i)?b.color:'var(--border-card)'}`,borderRadius:'var(--radius-lg)',padding:'24px 32px',textAlign:'center',opacity:litCards.includes(i)?1:0,transform:litCards.includes(i)?'scale(1) translateY(0)':'scale(0.9) translateY(12px)',transition:'all 0.6s cubic-bezier(0.34,1.56,0.64,1)',minWidth:140 }}>
-                <div style={{ fontSize:32,marginBottom:8 }}>{b.emoji}</div>
+                <div style={{ width:44,height:44,borderRadius:'50%',background:b.color,color:'#050505',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-heading)',fontWeight:700,fontSize:18,margin:'0 auto 10px' }}>{b.initial}</div>
                 <div style={{ fontWeight:700,marginBottom:4 }}>{b.name}</div>
                 <div style={{ fontSize:20,fontWeight:700,color:b.color,marginBottom:2 }}>{b.amount}</div>
                 <div style={{ fontSize:11,color:'var(--text-muted)' }}>{b.pct} of vault</div>

@@ -25,6 +25,8 @@ export const Icon = {
   zap: (p) => wrap(<path d="M12.5 3 5 13.5h6l-1 7.5L19 10.5h-6.5L12.5 3Z" />, p?.size),
   wallet: (p) => wrap(<><rect x="3" y="6.5" width="18" height="13" rx="2.2" /><path d="M3 10h18" /><circle cx="16.5" cy="14" r="1" fill="currentColor" stroke="none" /></>, p?.size),
   shield: (p) => wrap(<><path d="M12 3.5 5 6.3v5.4C5 16.4 8 19.8 12 21c4-1.2 7-4.6 7-9.3V6.3L12 3.5Z" /><path d="M9 12l2.2 2.2L15.5 9.5" /></>, p?.size),
+  coins: (p) => wrap(<><ellipse cx="9" cy="7.5" rx="6" ry="3" /><path d="M3 7.5V12c0 1.66 2.69 3 6 3s6-1.34 6-3V7.5" /><path d="M3 12v4.5c0 1.66 2.69 3 6 3 .34 0 .68-.02 1-.05" /><ellipse cx="16" cy="14.5" rx="5" ry="2.5" opacity="0.9" /><path d="M11 14.5V19c0 1.1 2.24 2 5 2s5-.9 5-2v-4.5" /></>, p?.size),
+  unlock: (p) => wrap(<><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 7.2-2.4" /></>, p?.size),
 };
 
 export default function Icn({ name, size = 20, style, className }) {

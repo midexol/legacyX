@@ -1,4 +1,5 @@
 import React from 'react';
+import Icn from '../ui/Icon';
 import '../../styles/components.css';
 
 export default function WalletModal({ open, onClose, onConnect }) {
@@ -7,7 +8,7 @@ export default function WalletModal({ open, onClose, onConnect }) {
       <div className="modal">
         <button className="modal-close" onClick={onClose}>×</button>
         <div style={{ textAlign:'center', marginBottom:28 }}>
-          <div style={{ width:64,height:64,background:'linear-gradient(135deg,#FFD166,#D4A017)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,margin:'0 auto 16px' }}>🔐</div>
+          <div style={{ width:64,height:64,background:'linear-gradient(135deg,#FFD166,#D4A017)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',color:'#211A0E',margin:'0 auto 16px' }}><Icn name="lock" size={28} /></div>
           <div className="modal-title">Connect Wallet</div>
           <div className="modal-sub">Connect your wallet to access your Legacy Vault on Flare Coston2</div>
         </div>
