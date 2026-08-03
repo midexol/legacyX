@@ -1,67 +1,79 @@
 import { prisma } from "../db/prisma";
+import { env } from "../config/env";
 import { logger } from "../utils/logger";
-import { mockTxHash } from "../utils/mockChain";
+import { mockAddress, mockTxHash } from "../utils/mockChain";
+import { toFixedPoint } from "../utils/decimal";
 
-const MAX_MATCHES_PER_SWEEP = 500;
+// API_CONTRACT.md deliberately leaves matching/settlement up to the backend
+// ("that's your system's job, not the frontend's concern"). There's no real
+// counterparty liquidity or on-chain settlement to integrate for the
+// hackathon, so this simulates both: a pending order "finds a buyer" after
+// a short delay (at or above the seller's minPrice), then "settles on-chain"
+// after another delay, producing a mock tx hash. The frontend just polls
+// GET /api/orders and sees status move pending -> matched -> settled.
 
-function findBestSell() {
-  return prisma.otcOrder.findFirst({
-    where: { side: "SELL", status: "OPEN" },
-    orderBy: [{ price: "asc" }, { createdAt: "asc" }],
-  });
+function decimalToDisplayString(scaled: bigint, decimals = 6): string {
+  const scale = 10n ** 18n;
+  const whole = scaled / scale;
+  const frac = scaled % scale;
+  const fracStr = frac.toString().padStart(18, "0").slice(0, decimals).replace(/0+$/, "");
+  return fracStr ? `${whole}.${fracStr}` : whole.toString();
 }
 
-function findBestBuy() {
-  return prisma.otcOrder.findFirst({
-    where: { side: "BUY", status: "OPEN" },
-    orderBy: [{ price: "desc" }, { createdAt: "asc" }],
-  });
+// Buyer pays at or up to 8% above the seller's floor — never below it.
+function simulateMatchedPrice(minPrice: string): string {
+  const floor = toFixedPoint(minPrice);
+  const premiumBps = BigInt(Math.floor(Math.random() * 800)); // 0.00%–8.00%
+  const matched = floor + (floor * premiumBps) / 10_000n;
+  return decimalToDisplayString(matched);
 }
 
-// Off-chain price-time-priority crossing engine: pairs the cheapest open
-// sell against the richest open buy, fills whichever side is smaller, and
-// settles the trade at the resting (earlier-placed) order's price. Runs
-// after every order placement and on a cron tick so unattended orders still
-// get matched. Only the resulting OtcTrade (amount/price/txHash) is ever
-// exposed — never which two orders/owners produced it.
 export async function runMatchingSweep() {
-  let matches = 0;
+  const now = Date.now();
+  let matched = 0;
+  let settled = 0;
 
-  for (let i = 0; i < MAX_MATCHES_PER_SWEEP; i++) {
-    const [sell, buy] = await Promise.all([findBestSell(), findBestBuy()]);
-    if (!sell || !buy || buy.price < sell.price) break;
-
-    const fillAmount = Math.min(sell.amount, buy.amount);
-    const makerOrder = sell.createdAt <= buy.createdAt ? sell : buy;
-    const txHash = mockTxHash();
-
-    const trade = await prisma.otcTrade.create({
-      data: { amount: fillAmount, price: makerOrder.price, txHash },
-    });
-
-    const sellRemaining = sell.amount - fillAmount;
-    const buyRemaining = buy.amount - fillAmount;
-
+  const matchCutoff = new Date(now - env.OTC_MATCH_DELAY_MS);
+  const pending = await prisma.otcOrder.findMany({
+    where: { status: "pending", createdAt: { lte: matchCutoff } },
+    take: 100,
+  });
+  for (const order of pending) {
     await prisma.otcOrder.update({
-      where: { id: sell.id },
+      where: { seq: order.seq },
       data: {
-        amount: Math.max(sellRemaining, 0),
-        status: sellRemaining > 0 ? "OPEN" : "SETTLED",
-        tradeId: trade.id,
+        status: "matched",
+        buyerAddress: mockAddress(),
+        matchedPrice: simulateMatchedPrice(order.minPrice),
+        matchedAt: new Date(),
       },
     });
-    await prisma.otcOrder.update({
-      where: { id: buy.id },
-      data: {
-        amount: Math.max(buyRemaining, 0),
-        status: buyRemaining > 0 ? "OPEN" : "SETTLED",
-        tradeId: trade.id,
-      },
-    });
-
-    matches++;
+    matched++;
   }
 
-  if (matches > 0) logger.info({ matches }, "OTC matching sweep settled trades");
-  return { matches };
+  const settleCutoff = new Date(now - env.OTC_SETTLE_DELAY_MS);
+  const readyToSettle = await prisma.otcOrder.findMany({
+    where: { status: "matched", matchedAt: { lte: settleCutoff } },
+    take: 100,
+  });
+  for (const order of readyToSettle) {
+    await prisma.$transaction([
+      prisma.otcSettlement.create({
+        data: {
+          orderSeq: order.seq,
+          asset: order.asset,
+          amount: order.amount,
+          price: order.matchedPrice ?? order.minPrice,
+          txHash: mockTxHash(),
+        },
+      }),
+      prisma.otcOrder.update({ where: { seq: order.seq }, data: { status: "settled" } }),
+    ]);
+    settled++;
+  }
+
+  if (matched > 0 || settled > 0) {
+    logger.info({ matched, settled }, "OTC matching sweep");
+  }
+  return { matched, settled };
 }

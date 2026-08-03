@@ -53,8 +53,8 @@ LegacyX combines four familiar concepts into one on-chain platform:
 ## Tech Stack
 
 - **Smart Contracts:** Solidity, deployed on Flare Coston2 Testnet
-- **Backend:** REST APIs, database, verification logic (Flare service integrations, mocked where needed for the hackathon)
-- **Frontend:** Web app with wallet integration, dashboard, deposit/beneficiary flows, and private OTC interface
+- **Backend:** Express + TypeScript REST API for the Private OTC Marketplace only (Prisma + SQLite, simulated matching/settlement). Vault creation, beneficiaries, inheritance conditions, and claims are handled entirely client-side by the frontend (wallet + `localStorage`) — `frontend/API_CONTRACT.md` is the source of truth for what the backend actually implements.
+- **Frontend:** Vite + React web app with wallet integration, dashboard, vault creation flow, unlock demo, and the private OTC marketplace UI
 - **Design:** Figma prototype, UI/UX
 
 ## Repository Structure
@@ -62,20 +62,21 @@ LegacyX combines four familiar concepts into one on-chain platform:
 ```
 legacyX/
 ├── contracts/     # Legacy Vault & OTC smart contracts, deployment scripts, tests
-├── backend/       # REST APIs, database, verification & Flare integrations
-├── frontend/      # Web application (wallet connect, dashboard, vault, OTC UI)
+├── backend/       # Private OTC Marketplace REST API (Prisma + SQLite)
+├── frontend/      # Vite + React web app (wallet connect, dashboard, vault, OTC UI)
+│   └── API_CONTRACT.md   # source of truth for the backend's request/response shapes
 ├── design/        # Figma exports, branding, user flows
 └── docs/          # Documentation, pitch deck, demo materials
 ```
 
-*(`backend/` is implemented — see [backend/README.md](backend/README.md). `contracts/`, `design/`, and `docs/` will be populated as those tracks land.)*
+*(`backend/` and `frontend/` are implemented — see [backend/README.md](backend/README.md) and `frontend/API_CONTRACT.md`. `contracts/`, `design/`, and `docs/` will be populated as those tracks land.)*
 
 ## How It Works — Architecture
 
-1. **User deposits assets** into the Legacy Vault smart contract and configures beneficiaries + inheritance conditions.
-2. **Verification layer** monitors/receives proof that a condition has been met (inactivity, death certificate, multi-party approval).
+1. **User deposits assets, configures beneficiaries, and sets inheritance conditions** — handled client-side by the frontend (wallet + `localStorage`), backed by the Legacy Vault smart contract.
+2. **Verification layer** monitors/receives proof that a condition has been met (inactivity, death certificate, multi-party approval) — simulated for the hackathon demo (`/unlock`).
 3. **Vault contract releases funds** proportionally to each beneficiary's wallet once conditions are satisfied.
-4. **Private OTC contract** lets a beneficiary list inherited assets for sale; a matching engine pairs buyer and seller off-chain, and only the final trade settles on-chain.
+4. **Private OTC marketplace (backend-powered)** lets a beneficiary list inherited assets for sale; a simulated matching engine moves listings from `pending` → `matched` → `settled`, and only the final settlement (tx hash) is ever public — see [backend/README.md](backend/README.md).
 
 ## Getting Started
 
@@ -83,22 +84,22 @@ legacyX/
 git clone https://github.com/midexol/legacyX.git
 cd legacyX
 
-# Frontend (Next.js)
+# Frontend (Vite + React)
 npm install --prefix frontend
+cp frontend/.env.example frontend/.env   # set VITE_API_BASE_URL to use the real backend
 npm run dev:frontend
 
-# Backend (Express + Prisma API)
+# Backend (Express + Prisma API — powers the OTC Marketplace only)
 npm run install:backend
 cp backend/.env.example backend/.env
 npm run --prefix backend prisma:migrate -- --name init
-npm run --prefix backend seed
 npm run dev:backend
 
 # Or run both together:
 npm run dev:all
 ```
 
-The backend listens on `http://localhost:4000` by default (see `backend/.env.example`) and expects the frontend at `http://localhost:3000`. Full API reference and design notes: [backend/README.md](backend/README.md).
+The backend listens on `http://localhost:4000` by default (see `backend/.env.example`) and expects the frontend at `http://localhost:5173` (Vite's default). Leaving `VITE_API_BASE_URL` unset runs the frontend entirely on local mock data — no backend required. Full API reference: [backend/README.md](backend/README.md).
 
 ## Team
 
@@ -107,10 +108,9 @@ Built for a hackathon by a 5-person team covering smart contracts, backend, fron
 ## Roadmap
 
 - [ ] Legacy Vault smart contract (deposits, beneficiaries, withdrawals)
-- [x] Inheritance condition verification (simulated → real-world data via Flare) — backend REST API + background sweep, see [backend/README.md](backend/README.md)
-- [x] Beneficiary claim flow — backend API (signature-verified lookup + claim)
-- [x] Private OTC marketplace contract + matching — backend off-chain matching engine (on-chain settlement contract still pending)
-- [ ] Full frontend integration (frontend currently uses local mock state; wiring it to the backend API is a separate task)
+- [x] Vault creation, beneficiaries, inheritance conditions, unlock demo — frontend, client-side (wallet + `localStorage`)
+- [x] Private OTC marketplace API — backend, simulated matching/settlement engine (see [backend/README.md](backend/README.md))
+- [ ] Real on-chain settlement for the OTC marketplace (currently simulated)
 - [ ] Testnet deployment (Flare Coston2)
 - [ ] Demo & hackathon submission
 
