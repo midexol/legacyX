@@ -2,7 +2,7 @@
   "name": "legacyx-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "LegacyX backend — REST API, database, and inheritance verification/OTC matching engine",
+  "description": "LegacyX backend — REST API for the Private OTC Marketplace (frontend/API_CONTRACT.md)",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -14,18 +14,14 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts"
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "ethers": "^6.13.4",
     "express": "^4.21.1",
     "helmet": "^7.2.0",
-    "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
     "node-cron": "^4.6.0",
     "pino": "^9.5.0",
     "pino-http": "^10.3.0",
@@ -34,8 +30,6 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/jsonwebtoken": "^9.0.7",
-    "@types/morgan": "^1.9.9",
     "@types/node": "^22.9.0",
     "@types/node-cron": "^3.0.11",
     "@types/supertest": "^6.0.2",
@@ -45,8 +39,5 @@
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   }
 }

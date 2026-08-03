@@ -6,11 +6,9 @@ import { env } from "./config/env";
 import { logger } from "./utils/logger";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import healthRoutes from "./routes/health.routes";
-import authRoutes from "./routes/auth.routes";
-import vaultRoutes from "./routes/vault.routes";
-import claimRoutes from "./routes/claim.routes";
-import otcRoutes from "./routes/otc.routes";
-import conditionActionsRoutes from "./routes/condition-actions.routes";
+import ordersRoutes from "./routes/orders.routes";
+import statsRoutes from "./routes/stats.routes";
+import settlementsRoutes from "./routes/settlements.routes";
 
 export function createApp() {
   const app = express();
@@ -21,11 +19,9 @@ export function createApp() {
   app.use(pinoHttp({ logger, autoLogging: env.NODE_ENV !== "test" }));
 
   app.use("/health", healthRoutes);
-  app.use("/api/auth", authRoutes);
-  app.use("/api/vaults", vaultRoutes);
-  app.use("/api/claims", claimRoutes);
-  app.use("/api/otc", otcRoutes);
-  app.use("/api/conditions", conditionActionsRoutes);
+  app.use("/api/orders", ordersRoutes);
+  app.use("/api/stats", statsRoutes);
+  app.use("/api/settlements", settlementsRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

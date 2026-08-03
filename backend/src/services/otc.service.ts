@@ -1,76 +1,127 @@
-import type { OtcOrder } from "@prisma/client";
+import type { OtcOrder, OtcSettlement } from "@prisma/client";
 import { prisma } from "../db/prisma";
 import { ApiError } from "../utils/ApiError";
+import { bucketAmount, isPositiveDecimalString } from "../utils/decimal";
+import { isEvmAddress } from "../utils/mockChain";
+import { toPublicOrderId } from "../utils/publicId";
 
-export interface CreateOtcOrderInput {
-  side: "BUY" | "SELL";
-  amount: number;
-  price: number;
-  vaultId?: string;
+export const SUPPORTED_ASSETS = ["FXRP", "FLR", "C2FLR"] as const;
+export type Asset = (typeof SUPPORTED_ASSETS)[number];
+
+export interface CreateOrderInput {
+  asset: unknown;
+  amount: unknown;
+  minPrice: unknown;
+  sellerAddress: unknown;
 }
 
-export async function createOrder(ownerAddress: string, input: CreateOtcOrderInput) {
-  if (input.amount <= 0) throw ApiError.badRequest("amount must be greater than 0");
-  if (input.price <= 0) throw ApiError.badRequest("price must be greater than 0");
+// Validates and normalizes a POST /api/orders body. Throws ApiError.badRequest
+// with a short, human-readable message — the frontend surfaces it directly
+// in a toast (see API_CONTRACT.md), so messages stay terse.
+export function parseCreateOrderInput(body: CreateOrderInput): {
+  asset: Asset;
+  amount: string;
+  minPrice: string;
+  sellerAddress: string;
+} {
+  if (typeof body.asset !== "string" || !SUPPORTED_ASSETS.includes(body.asset as Asset)) {
+    throw ApiError.badRequest(`asset must be one of ${SUPPORTED_ASSETS.join(", ")}`);
+  }
+  if (!isPositiveDecimalString(body.amount)) {
+    throw ApiError.badRequest("amount must be greater than 0");
+  }
+  if (!isPositiveDecimalString(body.minPrice)) {
+    throw ApiError.badRequest("minPrice must be greater than 0");
+  }
+  if (typeof body.sellerAddress !== "string" || !isEvmAddress(body.sellerAddress)) {
+    throw ApiError.badRequest("sellerAddress must be a valid wallet address");
+  }
 
+  return {
+    asset: body.asset as Asset,
+    amount: body.amount,
+    minPrice: body.minPrice,
+    // Normalized to lowercase so later case-insensitive lookups (My Orders)
+    // are a plain equality match — SQLite has no case-insensitive collation
+    // for this out of the box.
+    sellerAddress: body.sellerAddress.toLowerCase(),
+  };
+}
+
+export async function createOrder(input: ReturnType<typeof parseCreateOrderInput>) {
   return prisma.otcOrder.create({
     data: {
-      ownerAddress,
-      side: input.side,
+      asset: input.asset,
       amount: input.amount,
-      price: input.price,
-      vaultId: input.vaultId,
+      minPrice: input.minPrice,
+      sellerAddress: input.sellerAddress,
+      status: "pending",
     },
   });
 }
 
-// The order book never reveals whose order is whose (matching the brief's
-// "who the seller is / who the buyer is" confidentiality requirement) —
-// unless the caller happens to be authenticated as that order's own owner.
-export function serializeOrder(order: OtcOrder, viewerAddress?: string) {
-  const mine = viewerAddress != null && order.ownerAddress.toLowerCase() === viewerAddress.toLowerCase();
+// GET /api/orders — public, redacted. Never includes an address, exact
+// amount, or price (only a bucketed amount range) per the contract's core
+// privacy rule.
+export function serializeRedacted(order: OtcOrder) {
   return {
-    id: order.id,
-    side: order.side,
-    amount: order.amount,
-    price: order.price,
+    id: toPublicOrderId(order.seq),
+    asset: order.asset,
+    amountRange: bucketAmount(order.amount),
     status: order.status,
-    createdAt: order.createdAt,
-    mine,
-    ...(mine ? { ownerAddress: order.ownerAddress } : {}),
+    createdAt: order.createdAt.getTime(),
   };
 }
 
-export async function getOrderById(orderId: string) {
-  return prisma.otcOrder.findUnique({ where: { id: orderId } });
+// GET /api/orders/mine — full detail, only ever returned to the address that
+// owns the order (as seller or matched buyer).
+export function serializeMine(order: OtcOrder) {
+  return {
+    id: toPublicOrderId(order.seq),
+    asset: order.asset,
+    amount: order.amount,
+    minPrice: order.minPrice,
+    matchedPrice: order.matchedPrice,
+    buyerAddress: order.buyerAddress,
+    status: order.status,
+    createdAt: order.createdAt.getTime(),
+    updatedAt: order.updatedAt.getTime(),
+  };
 }
 
-export async function listOrderBook(viewerAddress?: string) {
+export async function listActiveOrders() {
   const orders = await prisma.otcOrder.findMany({
-    where: { status: { in: ["OPEN", "MATCHED", "SETTLED"] } },
+    where: { status: { in: ["pending", "matched", "settled"] } },
     orderBy: { createdAt: "desc" },
     take: 200,
   });
-  return orders.map((o) => serializeOrder(o, viewerAddress));
+  return orders.map(serializeRedacted);
 }
 
-export async function cancelOrder(orderId: string, ownerAddress: string) {
-  const order = await prisma.otcOrder.findUnique({ where: { id: orderId } });
-  if (!order) throw ApiError.notFound("Order not found");
-  if (order.ownerAddress.toLowerCase() !== ownerAddress.toLowerCase()) {
-    throw ApiError.forbidden("You do not own this order");
-  }
-  if (order.status !== "OPEN") {
-    throw ApiError.conflict("Only open orders can be cancelled");
-  }
-
-  return prisma.otcOrder.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
-}
-
-export async function listTrades() {
-  return prisma.otcTrade.findMany({
-    orderBy: { settledAt: "desc" },
+export async function listMyOrders(address: string) {
+  const orders = await prisma.otcOrder.findMany({
+    where: {
+      OR: [{ sellerAddress: { equals: address } }, { buyerAddress: { equals: address } }],
+    },
+    orderBy: { createdAt: "desc" },
     take: 200,
-    select: { id: true, amount: true, price: true, txHash: true, settledAt: true },
   });
+  return orders.map(serializeMine);
+}
+
+export function serializeSettlement(settlement: OtcSettlement) {
+  return {
+    hash: settlement.txHash,
+    asset: settlement.asset,
+    amountRange: bucketAmount(settlement.amount),
+    settledAt: settlement.settledAt.getTime(),
+  };
+}
+
+export async function listSettlements() {
+  const settlements = await prisma.otcSettlement.findMany({
+    orderBy: { settledAt: "desc" },
+    take: 100,
+  });
+  return settlements.map(serializeSettlement);
 }
