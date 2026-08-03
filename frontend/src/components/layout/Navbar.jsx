@@ -33,7 +33,13 @@ export default function Navbar() {
         <div className="container">
           <div className="navbar-inner">
             <NavLink to="/" className="navbar-logo">
-              <div className="navbar-logo-icon">⬡</div>
+              <div className="navbar-logo-icon">
+                <svg viewBox="0 0 100 100" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M50 10 L82 23 V49 C82 71 68 86 50 93 C32 86 18 71 18 49 V23 Z" fill="#1a1204"/>
+                  <circle cx="50" cy="43" r="10" fill="#FFD166"/>
+                  <path d="M50 51 L58 71 H42 Z" fill="#FFD166"/>
+                </svg>
+              </div>
               <span className="navbar-logo-text">LegacyX</span>
             </NavLink>
 

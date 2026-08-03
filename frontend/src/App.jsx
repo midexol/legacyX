@@ -44,7 +44,8 @@ export default function App() {
               <Route path="/dashboard"     element={<RequireWallet><Dashboard /></RequireWallet>} />
               <Route path="/dashboard-demo" element={<Dashboard demoMode />} />
               <Route path="/vault"         element={<RequireWallet><CreateVault /></RequireWallet>} />
-              <Route path="/marketplace"   element={<Marketplace />} />
+              <Route path="/marketplace"    element={<Marketplace />} />
+              <Route path="/marketplace-demo" element={<Marketplace demoMode />} />
               <Route path="/unlock"        element={<Unlock />} />
             </Routes>
           </BrowserRouter>

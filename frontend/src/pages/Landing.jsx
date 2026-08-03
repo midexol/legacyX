@@ -284,16 +284,16 @@ export default function Landing() {
               <p style={{ fontSize:13.5, color:'var(--text-muted)', lineHeight:1.7, marginBottom:12 }}>
                 On-chain crypto inheritance, secured by smart contracts — not custodians. Built on Flare.
               </p>
-              <Link to="/dashboard-demo" style={{ fontSize:13, color:'var(--gold)', fontWeight:600 }}>Preview a demo dashboard →</Link>
+              <Link to="/dashboard-demo" style={{ fontSize:13, color:'var(--gold)', fontWeight:600, display:'block' }}>Preview a demo dashboard →</Link>
+              <Link to="/marketplace-demo" style={{ fontSize:13, color:'var(--gold)', fontWeight:600, display:'block', marginTop:6 }}>Preview a demo marketplace →</Link>
             </div>
 
             <div style={{ display:'flex', gap:12 }}>
               {[
-                { label:'X', href:'#', d:'M18.9 3H22l-7.6 8.7L23 21h-6.8l-5.3-6.9L4.8 21H1.6l8.1-9.3L1 3h7l4.8 6.3L18.9 3Zm-1.2 16.2h1.9L7.5 4.7H5.5l12.2 14.5Z' },
-                { label:'GitHub', href:'#', d:'M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z' },
-                { label:'Discord', href:'#', d:'M20 5.4A17.6 17.6 0 0 0 15.6 4l-.22.4a12.9 12.9 0 0 1 3.9 1.5 14.5 14.5 0 0 0-15 0 12.9 12.9 0 0 1 3.9-1.5L8 4a17.6 17.6 0 0 0-4.4 1.4C1 10 .3 14.5.6 19a17.7 17.7 0 0 0 5.4 2.7l.7-1.2a11.3 11.3 0 0 1-1.8-.9l.4-.3a12.6 12.6 0 0 0 10.2 0l.4.3a11.3 11.3 0 0 1-1.8.9l.7 1.2A17.6 17.6 0 0 0 20.1 19c.4-5.2-.8-9.6-3.1-13.6ZM8.6 15.9c-.9 0-1.7-.9-1.7-2s.7-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Zm6.8 0c-.9 0-1.7-.9-1.7-2s.7-2 1.7-2 1.7.9 1.7 2-.8 2-1.7 2Z' },
+                { label:'X', href:'https://x.com/hacklegendss', d:'M18.9 3H22l-7.6 8.7L23 21h-6.8l-5.3-6.9L4.8 21H1.6l8.1-9.3L1 3h7l4.8 6.3L18.9 3Zm-1.2 16.2h1.9L7.5 4.7H5.5l12.2 14.5Z' },
+                { label:'GitHub', href:'https://github.com/midexol/legacyX', d:'M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z' },
               ].map(s => (
-                <a key={s.label} href={s.href} aria-label={s.label} className="footer-social">
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="footer-social">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d={s.d} /></svg>
                 </a>
               ))}
