@@ -2,18 +2,6 @@
    LEGACYX — COMPONENT STYLES
    ============================================================ */
 
-/* ── Cursor Glow ── */
-.cursor-glow {
-  position: fixed;
-  width: 400px; height: 400px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--gold-rgb),0.16) 0%, transparent 70%);
-  pointer-events: none;
-  transform: translate(-50%,-50%);
-  z-index: 0;
-  transition: opacity 0.3s ease;
-}
-
 /* ── Gradient Orbs ── */
 .orb {
   position: fixed; border-radius: 50%;
@@ -68,6 +56,16 @@
 .navbar-link:hover,.navbar-link.active { color:var(--text-primary); }
 .navbar-link:hover::after,.navbar-link.active::after { width:100%; }
 .navbar-actions      { display:flex; align-items:center; gap:var(--space-3); }
+
+/* When the navbar sits over the hero photo (always dark, regardless of theme),
+   force legible light text instead of theme-bound colors that can go invisible. */
+.navbar.hero-context .navbar-link { color: rgba(255,255,255,0.82); }
+.navbar.hero-context .navbar-link:hover,
+.navbar.hero-context .navbar-link.active { color: #fff; }
+.navbar.hero-context .btn-ghost { color: rgba(255,255,255,0.92); border-color: rgba(255,255,255,0.28); }
+.navbar.hero-context .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); }
+.navbar.hero-context .theme-toggle { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.25); }
+.navbar.hero-context .theme-toggle:hover { color: #fff; }
 .hamburger { display:none; flex-direction:column; justify-content:center; gap:5px; width:32px; height:32px; padding:6px; }
 .hamburger span { display:block; width:100%; height:2px; background:var(--text-primary); border-radius:2px; transition:all var(--dur-fast) ease; }
 

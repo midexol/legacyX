@@ -8,7 +8,6 @@ import { ToastProvider } from './components/ui/Toast';
 import Navbar from './components/layout/Navbar';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ParticleCanvas from './components/background/ParticleCanvas';
-import CursorGlow from './components/background/CursorGlow';
 import Landing     from './pages/Landing';
 import Dashboard   from './pages/Dashboard';
 import CreateVault from './pages/CreateVault';
@@ -30,7 +29,6 @@ export default function App() {
             <ScrollToTop />
             {/* Fixed background layers */}
             <ParticleCanvas />
-            <CursorGlow />
             <div className="orb orb-blue"  aria-hidden="true" />
             <div className="orb orb-purple" aria-hidden="true" />
             <div className="orb orb-gold"  aria-hidden="true" />

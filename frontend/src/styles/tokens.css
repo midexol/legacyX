@@ -87,6 +87,7 @@
   --shadow-card:   0 8px 32px rgba(0, 0, 0, 0.5);
 
   --bg-elevated: #0D0D10;
+  --bg-primary-rgb: 5,5,5;
   --card-sheen: rgba(255,255,255,0.04);
   --card-hover-border: rgba(255,255,255,0.15);
   --tint-1: rgba(255,255,255,0.04);
@@ -121,6 +122,7 @@
   --shadow-card:   0 4px 20px rgba(60, 45, 15, 0.10), 0 1px 3px rgba(60,45,15,0.08);
 
   --bg-elevated: #FFFFFF;
+  --bg-primary-rgb: 247,243,234;
   --card-sheen: rgba(32,24,8,0.025);
   --card-hover-border: rgba(32,24,8,0.24);
   --tint-1: rgba(32,24,8,0.035);

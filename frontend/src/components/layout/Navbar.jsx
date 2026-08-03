@@ -9,6 +9,7 @@ export default function Navbar() {
   const { isConnected, account, connect, disconnect, shorten } = useWallet();
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
+  const isLandingHero = location.pathname === '/'; // hero photo is always dark, regardless of theme
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`navbar${scrolled ? ' scrolled' : ''}`} id="navbar">
+      <nav className={`navbar${scrolled ? ' scrolled' : ''}${isLandingHero && !scrolled ? ' hero-context' : ''}`} id="navbar">
         <div className="container">
           <div className="navbar-inner">
             <NavLink to="/" className="navbar-logo">
