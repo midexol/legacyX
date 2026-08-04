@@ -108,6 +108,16 @@ For a chain-linked `MULTI_PARTY_APPROVAL` condition, the approver must sign the 
 
 Configure with `RPC_URL_BY_CHAIN_ID`, `OPERATOR_PRIVATE_KEY`, and `TRUSTED_VERIFIER_PRIVATE_KEY` in `.env` — see `.env.example`.
 
+### Ready-to-use Coston2 example
+
+A `LegacyVault` is already deployed and pre-populated on Coston2 specifically to exercise this integration end-to-end — see [contracts/README.md](../contracts/README.md) for the full list of live contracts. To drive it from this backend:
+
+1. Set `RPC_URL_BY_CHAIN_ID={"114":"https://coston2-api.flare.network/ext/C/rpc"}`, and your own `OPERATOR_PRIVATE_KEY` / `TRUSTED_VERIFIER_PRIVATE_KEY` (funded with a little C2FLR for gas — this vault's on-chain `trustedVerifier` is `0x54e5850b45B1Da9468Fd5faB1e85F3F7f01aB67C`, so `TRUSTED_VERIFIER_PRIVATE_KEY` must correspond to that address for `verifyByTrustedVerifier` to succeed).
+2. Sign in as the vault's on-chain owner (`0x012B1d830D98b09A5e16F30c4bd7323eA2511730`) via the normal `/api/auth` flow — `link-chain` checks `owner()` against your session's wallet.
+3. `POST /api/vaults` to create a DB row, then `POST /api/vaults/:id/link-chain` with `{ "chainId": 114, "contractAddress": "0x8Bb5CEE03FE7B51767459F944971949c5BC43E89" }`.
+4. `POST /api/vaults/:id/conditions` with `{ "type": "INACTIVITY" }`, then `POST /api/vaults/:id/conditions/:conditionId/link-chain` with `{ "onChainId": 0 }` — this vault already has an on-chain `INACTIVITY` condition at index 0 (and `inactivityDays = 0`, so it's immediately elapsed).
+5. `POST /api/vaults/:id/verify` — this submits a **real on-chain `checkInactivity` transaction** signed by your `OPERATOR_PRIVATE_KEY`, which unlocks the vault (it already holds 1 FXRP and has a beneficiary at `0x54e5850b45B1Da9468Fd5faB1e85F3F7f01aB67C`, 100% allocation). Check the resulting tx hash on [Coston2's explorer](https://coston2.testnet.flarescan.com/address/0x8Bb5CEE03FE7B51767459F944971949c5BC43E89).
+
 Approval signature message: `` Approve inheritance condition ${conditionId} for vault ${vaultId} ``
 
 ### Claims

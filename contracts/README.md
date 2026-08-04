@@ -35,6 +35,7 @@ Deployed and exercised end-to-end on real testnets — not simulated, not local 
 | `LegacyVaultRelay` | Base Sepolia | [`0x6aecedc437b6679d7c0f29863db1b059fccaf977`](https://sepolia.basescan.org/address/0x6aecedc437b6679d7c0f29863db1b059fccaf977) (same address — first tx from the deployer on both chains) |
 | `LegacyVault` (real FXRP) | Coston2 | [`0xD59dbEa6435cf284E80a2745D43b49c2bD89D795`](https://coston2.testnet.flarescan.com/address/0xD59dbEa6435cf284E80a2745D43b49c2bD89D795) |
 | `LegacyVault` (demo asset) | Base Sepolia | [`0xda915D3222Aa0D3fd392Bf746f8ed6FC02ADD6e6`](https://sepolia.basescan.org/address/0xda915D3222Aa0D3fd392Bf746f8ed6FC02ADD6e6) |
+| `LegacyVault` (backend-integration demo, `inactivityDays=0`) | Coston2 | [`0x8Bb5CEE03FE7B51767459F944971949c5BC43E89`](https://coston2.testnet.flarescan.com/address/0x8Bb5CEE03FE7B51767459F944971949c5BC43E89) — pre-populated with 1 FXRP, a beneficiary, and an `INACTIVITY` condition at index 0, ready for the backend's `/verify` endpoint to unlock live (see `backend/README.md`'s "Ready-to-use Coston2 example") |
 | Demo ERC20 asset (`MockERC20`) | Base Sepolia | [`0xD59dbEa6435cf284E80a2745D43b49c2bD89D795`](https://sepolia.basescan.org/address/0xD59dbEa6435cf284E80a2745D43b49c2bD89D795) |
 | FXRP (OFT-wrapped) | Coston2 | [`0x0b6A3645c240605887a5532109323A3E12273dc7`](https://coston2.testnet.flarescan.com/address/0x0b6A3645c240605887a5532109323A3E12273dc7) |
 
