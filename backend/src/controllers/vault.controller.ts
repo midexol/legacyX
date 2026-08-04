@@ -47,6 +47,16 @@ export const simulateInactivityHandler = asyncHandler(async (req: Request, res: 
   res.json(vault);
 });
 
+export const linkChainSchema = z.object({
+  chainId: z.coerce.number().int().positive(),
+  contractAddress: z.string(),
+});
+
+export const linkChainHandler = asyncHandler(async (req: Request, res: Response) => {
+  const vault = await vaultService.linkVaultToChain(req.params.id, req.user!.id, req.body);
+  res.json(vault);
+});
+
 export const verifyVaultHandler = asyncHandler(async (req: Request, res: Response) => {
   const vault = await verifyVaultNow(req.params.id, req.user!.id);
   res.json(vault);

@@ -1,9 +1,10 @@
 import { prisma } from "../db/prisma";
 import { ApiError } from "../utils/ApiError";
 import { isEvmAddress } from "../utils/mockChain";
-import { verifySignedMessage } from "../utils/signature";
+import { verifyOnChainApprovalSignature, verifySignedMessage } from "../utils/signature";
 import { getOwnedVaultOrThrow } from "./vault.service";
 import { tryUnlockVault } from "./verification.service";
+import { LegacyVaultClient } from "../chain/legacyVaultClient";
 
 export type ConditionType = "INACTIVITY" | "MANUAL_APPROVAL" | "MULTI_PARTY_APPROVAL" | "LEGAL_DOCUMENT";
 
@@ -96,6 +97,14 @@ async function getConditionOrThrow(conditionId: string) {
 // of their address with a signature rather than a login session, since
 // beneficiaries/trustees calling this may never have an authenticated
 // LegacyX account of their own.
+//
+// On a chain-linked vault (vault.contractAddress + condition.onChainId set),
+// the approver must sign the on-chain digest (see
+// verifyOnChainApprovalSignature) instead of the plain off-chain string,
+// because the same signature is then relayed straight into
+// LegacyVault.approveCondition — the contract independently re-verifies it,
+// so the two verification paths must agree on the exact bytes that were
+// signed.
 export async function approveCondition(conditionId: string, address: string, signature: string) {
   const condition = await getConditionOrThrow(conditionId);
 
@@ -111,8 +120,13 @@ export async function approveCondition(conditionId: string, address: string, sig
     throw ApiError.forbidden("Address is not an approver for this condition");
   }
 
-  const message = `Approve inheritance condition ${condition.id} for vault ${condition.vaultId}`;
-  if (!verifySignedMessage(message, signature, address)) {
+  const vault = condition.vault;
+  const isChainLinked = vault.chainId != null && vault.contractAddress != null && condition.onChainId != null;
+
+  const signatureValid = isChainLinked
+    ? verifyOnChainApprovalSignature(condition.onChainId!, vault.contractAddress!, signature, address)
+    : verifySignedMessage(`Approve inheritance condition ${condition.id} for vault ${condition.vaultId}`, signature, address);
+  if (!signatureValid) {
     throw ApiError.unauthorized("Signature does not match the approval message for this address");
   }
 
@@ -127,23 +141,41 @@ export async function approveCondition(conditionId: string, address: string, sig
     data: { conditionId, approverAddress: address.toLowerCase() },
   });
 
-  const approvalCount = condition.approvals.length + 1;
-  if (approvalCount >= cfg.requiredApprovals) {
-    await prisma.inheritanceCondition.update({
-      where: { id: conditionId },
-      data: { status: "SATISFIED", satisfiedAt: new Date() },
-    });
-    await tryUnlockVault(condition.vaultId);
+  if (isChainLinked) {
+    const client = new LegacyVaultClient(vault.chainId!, vault.contractAddress!);
+    const { satisfied, unlocked } = await client.approveCondition(condition.onChainId!, address, signature);
+
+    if (satisfied) {
+      await prisma.inheritanceCondition.update({
+        where: { id: conditionId },
+        data: { status: "SATISFIED", satisfiedAt: new Date() },
+      });
+    }
+    if (unlocked) {
+      await tryUnlockVault(condition.vaultId);
+    }
+  } else {
+    const approvalCount = condition.approvals.length + 1;
+    if (approvalCount >= cfg.requiredApprovals) {
+      await prisma.inheritanceCondition.update({
+        where: { id: conditionId },
+        data: { status: "SATISFIED", satisfiedAt: new Date() },
+      });
+      await tryUnlockVault(condition.vaultId);
+    }
   }
 
   return getConditionOrThrow(conditionId);
 }
 
 // Stands in for a trusted-verifier integration (death certificate registry,
-// legal document notarization, etc.) that's out of scope for the hackathon.
-// Gated by the shared ADMIN_API_KEY rather than a vault-owner session,
-// because the owner is — by definition — the person who may no longer be
-// able to act.
+// legal document notarization, etc.) — gated by the shared ADMIN_API_KEY
+// rather than a vault-owner session, because the owner is — by definition —
+// the person who may no longer be able to act. On a chain-linked vault, this
+// submits the attestation on-chain via the trusted-verifier key
+// (contracts/src/LegacyVault.sol#verifyByTrustedVerifier) before mirroring
+// the result into Prisma, so the two stay in sync instead of the DB
+// unilaterally declaring the condition satisfied.
 export async function verifyConditionByAdmin(conditionId: string) {
   const condition = await getConditionOrThrow(conditionId);
 
@@ -152,6 +184,12 @@ export async function verifyConditionByAdmin(conditionId: string) {
   }
   if (condition.status === "SATISFIED") {
     throw ApiError.conflict("Condition is already satisfied");
+  }
+
+  const vault = condition.vault;
+  if (vault.chainId != null && vault.contractAddress != null && condition.onChainId != null) {
+    const client = new LegacyVaultClient(vault.chainId, vault.contractAddress);
+    await client.verifyByTrustedVerifier(condition.onChainId);
   }
 
   const updated = await prisma.inheritanceCondition.update({
