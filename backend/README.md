@@ -72,6 +72,7 @@ All request/response bodies are JSON. Errors are `{ error: string, details?: unk
 | `POST /api/vaults/:id/heartbeat` | — | Resets the inactivity countdown ("I'm still here") |
 | `POST /api/vaults/:id/verify` | — | On-demand: re-check this vault's `INACTIVITY` condition now instead of waiting for the next cron tick |
 | `POST /api/vaults/:id/simulate-inactivity` | — | **Demo/QA helper.** Backdates the heartbeat past `inactivityDays` so the next verify call unlocks the vault, without waiting out the real window |
+| `POST /api/vaults/:id/link-chain` | `{ chainId, contractAddress }` | Links this vault to a real `LegacyVault` contract you deployed yourself (see `contracts/`). Verifies the contract's on-chain `owner()` matches your wallet before accepting the link. Once linked, the inactivity sweep and trusted-verifier attestation act on the real contract instead of local bookkeeping — see "Chain integration" below |
 
 ### Beneficiaries (nested under a vault, same owner auth)
 | Method & path | Body | Notes |
@@ -85,12 +86,27 @@ All request/response bodies are JSON. Errors are `{ error: string, details?: unk
 |---|---|---|---|
 | `POST /api/vaults/:id/conditions` | owner | `{ type, config? }` | `type` ∈ `INACTIVITY`, `MANUAL_APPROVAL`, `MULTI_PARTY_APPROVAL`, `LEGAL_DOCUMENT`. `config` required for the latter two — see below |
 | `GET /api/vaults/:id/conditions` | owner | — | |
-| `POST /api/conditions/:conditionId/approve` | signature | `{ address, signature }` | Only for `MULTI_PARTY_APPROVAL`; `address` must be one of the condition's `approvers` |
-| `POST /api/conditions/:conditionId/verify` | `x-admin-key` header | — | Only for `MANUAL_APPROVAL` / `LEGAL_DOCUMENT`; marks satisfied immediately |
+| `POST /api/vaults/:id/conditions/:conditionId/link-chain` | owner | `{ onChainId }` | Links this condition to its counterpart index in the linked contract's `conditions` array (vault must already be chain-linked). Rejects a mismatched condition type |
+| `POST /api/conditions/:conditionId/approve` | signature | `{ address, signature }` | Only for `MULTI_PARTY_APPROVAL`; `address` must be one of the condition's `approvers`. **Message format depends on whether the condition is chain-linked** — see below |
+| `POST /api/conditions/:conditionId/verify` | `x-admin-key` header | — | Only for `MANUAL_APPROVAL` / `LEGAL_DOCUMENT`; marks satisfied immediately (and, if chain-linked, submits the attestation on-chain first) |
 
 `config` shapes:
 - `MULTI_PARTY_APPROVAL`: `{ requiredApprovals: number, approvers: string[] }` (≥2 approvers, `requiredApprovals` between 1 and `approvers.length`)
 - `LEGAL_DOCUMENT`: `{ documentRef: string }`
+
+## Chain integration
+
+Vaults are pure off-chain simulation (`src/utils/mockChain.ts`) until the owner deploys a real `LegacyVault` (see [contracts/README.md](../contracts/README.md)) and links it with `POST /api/vaults/:id/link-chain`. Deposit/withdraw/heartbeat/claim stay wallet-signed by the user and are **not** wired up here — the backend only ever signs the actions `LegacyVault.sol` itself lets a third party submit:
+
+| Action | Contract call | Signed by |
+|---|---|---|
+| Inactivity sweep (`POST /api/vaults/:id/verify`, or the background cron) | `checkInactivity` | `OPERATOR_PRIVATE_KEY` |
+| Multi-party approval relay (`POST /api/conditions/:conditionId/approve`) | `approveCondition` | `OPERATOR_PRIVATE_KEY` (the approver signs; the backend just relays) |
+| Trusted-verifier attestation (`POST /api/conditions/:conditionId/verify`) | `verifyByTrustedVerifier` | `TRUSTED_VERIFIER_PRIVATE_KEY` |
+
+For a chain-linked `MULTI_PARTY_APPROVAL` condition, the approver must sign the **on-chain digest** (`keccak256(abi.encodePacked("Approve inheritance condition ", conditionId, " for vault ", address(this)))`, signed as raw bytes) rather than the plain off-chain string — the same signature gets relayed straight into the contract, which re-verifies it independently. See `verifyOnChainApprovalSignature` in `src/utils/signature.ts`.
+
+Configure with `RPC_URL_BY_CHAIN_ID`, `OPERATOR_PRIVATE_KEY`, and `TRUSTED_VERIFIER_PRIVATE_KEY` in `.env` — see `.env.example`.
 
 Approval signature message: `` Approve inheritance condition ${conditionId} for vault ${vaultId} ``
 

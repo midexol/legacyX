@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../utils/asyncHandler";
 import * as conditionService from "../services/condition.service";
+import { linkConditionToChain } from "../services/vault.service";
 
 export const createConditionSchema = z.object({
   type: z.enum(["INACTIVITY", "MANUAL_APPROVAL", "MULTI_PARTY_APPROVAL", "LEGAL_DOCUMENT"]),
@@ -16,6 +17,20 @@ export const createConditionHandler = asyncHandler(async (req: Request, res: Res
 export const listConditionsHandler = asyncHandler(async (req: Request, res: Response) => {
   const conditions = await conditionService.listConditions(req.params.id, req.user!.id);
   res.json(conditions);
+});
+
+export const linkConditionChainSchema = z.object({
+  onChainId: z.coerce.number().int().nonnegative(),
+});
+
+export const linkConditionChainHandler = asyncHandler(async (req: Request, res: Response) => {
+  const condition = await linkConditionToChain(
+    req.params.id,
+    req.params.conditionId,
+    req.user!.id,
+    req.body.onChainId
+  );
+  res.json(condition);
 });
 
 export const approveConditionSchema = z.object({

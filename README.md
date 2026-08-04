@@ -52,7 +52,7 @@ LegacyX combines four familiar concepts into one on-chain platform:
 
 ## Tech Stack
 
-- **Smart Contracts:** Solidity, deployed on Flare Coston2 Testnet
+- **Smart Contracts:** Solidity (Foundry), multichain — Flare Coston2 Testnet primary, plus additional EVM testnets bridged via LayerZero V2 so an owner's vaults across chains stay in sync and beneficiaries can claim on their own chain
 - **Backend:** REST APIs, database, verification logic (Flare service integrations, mocked where needed for the hackathon)
 - **Frontend:** Web app with wallet integration, dashboard, deposit/beneficiary flows, and private OTC interface
 - **Design:** Figma prototype, UI/UX
@@ -68,7 +68,7 @@ legacyX/
 └── docs/          # Documentation, pitch deck, demo materials
 ```
 
-*(`backend/` is implemented — see [backend/README.md](backend/README.md). `contracts/`, `design/`, and `docs/` will be populated as those tracks land.)*
+*(`backend/` and `contracts/` are implemented — see [backend/README.md](backend/README.md) and [contracts/README.md](contracts/README.md). `design/` and `docs/` will be populated as those tracks land.)*
 
 ## How It Works — Architecture
 

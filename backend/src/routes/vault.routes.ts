@@ -8,6 +8,8 @@ import {
   depositHandler,
   getVaultHandler,
   heartbeatHandler,
+  linkChainHandler,
+  linkChainSchema,
   listVaultsHandler,
   simulateInactivityHandler,
   verifyVaultHandler,
@@ -33,6 +35,7 @@ router.post(
   validate(idParamSchema, "params"),
   simulateInactivityHandler
 );
+router.post("/:id/link-chain", validate(idParamSchema, "params"), validate(linkChainSchema), linkChainHandler);
 
 // Nested resource routers (still under the vault-scoped auth above).
 router.use("/:id/beneficiaries", beneficiaryRouter);

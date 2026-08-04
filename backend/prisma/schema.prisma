@@ -51,6 +51,15 @@ model Vault {
   // by other beneficiaries claiming before them.
   unlockedBalance Float?
 
+  // Set once the owner deploys the real LegacyVault contract (contracts/src/LegacyVault.sol)
+  // for this vault and links it in via POST /:id/link-chain. Null means this
+  // vault is still purely the off-chain simulation described in mockChain.ts.
+  // When set, the backend-signable actions (inactivity sweep, trusted-verifier
+  // attestation, multi-party approval relay) act on the real contract instead
+  // of local bookkeeping.
+  chainId         Int?
+  contractAddress String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -94,6 +103,13 @@ model InheritanceCondition {
   // MULTI_PARTY_APPROVAL: { requiredApprovals: number, approvers: string[] }
   // LEGAL_DOCUMENT: { documentRef: string }
   config String @default("{}")
+
+  // Index of this condition inside the vault's on-chain `conditions` array
+  // (set by the owner when they add the matching condition via their own
+  // wallet on a chain-linked vault — see contracts/src/LegacyVault.sol). Null
+  // for purely off-chain vaults, or for on-chain vaults where this condition
+  // hasn't been linked yet.
+  onChainId Int?
 
   satisfiedAt DateTime?
   createdAt   DateTime  @default(now())
