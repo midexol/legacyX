@@ -14,6 +14,7 @@ import Dashboard   from './pages/Dashboard';
 import CreateVault from './pages/CreateVault';
 import Marketplace from './pages/Marketplace';
 import Unlock      from './pages/Unlock';
+import Docs        from './pages/Docs';
 
 import './styles/tokens.css';
 import './styles/globals.css';
@@ -47,6 +48,7 @@ export default function App() {
               <Route path="/marketplace"    element={<Marketplace />} />
               <Route path="/marketplace-demo" element={<Marketplace demoMode />} />
               <Route path="/unlock"        element={<Unlock />} />
+              <Route path="/docs"          element={<Docs />} />
             </Routes>
           </BrowserRouter>
         </ToastProvider>

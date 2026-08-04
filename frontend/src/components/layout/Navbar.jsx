@@ -25,6 +25,7 @@ export default function Navbar() {
     { to: '/vault',      label: 'Vault'       },
     { to: '/marketplace',label: 'Marketplace' },
     { to: '/dashboard',  label: 'Dashboard'   },
+    { to: '/docs',       label: 'Docs'        },
   ];
 
   return (

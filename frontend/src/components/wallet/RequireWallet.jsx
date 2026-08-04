@@ -22,12 +22,9 @@ export default function RequireWallet({ children }) {
         }}>
           <Icn name="lock" size={26} />
         </div>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px,3vw,32px)', fontWeight: 600, marginBottom: 12 }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px,3vw,32px)', fontWeight: 600, marginBottom: 28 }}>
           Connect your wallet to continue
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-          This page is tied to your on-chain identity — connect MetaMask on Flare Coston2 to view or manage your vault.
-        </p>
         <button
           className="btn btn-gold btn-lg"
           onClick={() => setModalOpen(true)}
