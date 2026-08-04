@@ -1,32 +1,72 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useWallet } from '../components/wallet/WalletProvider';
 import { useToast } from '../components/ui/Toast';
 import Icn from '../components/ui/Icon';
-import useReveal from '../hooks/useReveal';
+import { fetchListings, fetchStats, fetchSettlements, createOrder, apiMode } from '../lib/api';
 
-const TRADES = [
-  { id:'LX-8821', matched:true,  time:'2 min ago'  },
-  { id:'LX-8820', matched:false, time:'8 min ago'  },
-  { id:'LX-8819', matched:true,  time:'15 min ago' },
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s/60)} min ago`;
+  return `${Math.floor(s/3600)} hr ago`;
+}
+
+// Fixed sample data for the unauthenticated "preview" marketplace only — never shown on the live page.
+const DEMO_STATS = { priceUsd: 0.5214, volume24hUsd: 284000, tradesSettled: 142 };
+const DEMO_TRADES = [
+  { id:'LX-8821', asset:'FXRP', amountRange:'100-500', status:'matched', createdAt: Date.now()-2*60000  },
+  { id:'LX-8820', asset:'FXRP', amountRange:'500-1000',status:'pending', createdAt: Date.now()-8*60000  },
+  { id:'LX-8819', asset:'FLR',  amountRange:'50-100',  status:'matched', createdAt: Date.now()-15*60000 },
+];
+const DEMO_SETTLEMENTS = [
+  { hash:'0x4a2f…c31e', asset:'FXRP', amountRange:'100-500', settledAt: Date.now()-5*60000  },
+  { hash:'0x7d1b…9a3c', asset:'FLR',  amountRange:'50-100',  settledAt: Date.now()-12*60000 },
+  { hash:'0x2e5c…f88a', asset:'FXRP', amountRange:'500-1000',settledAt: Date.now()-31*60000 },
+  { hash:'0x9f3a…2b1d', asset:'C2FLR',amountRange:'0-100',   settledAt: Date.now()-3600000  },
 ];
 
-const SETTLEMENTS = [
-  { hash:'0x4a2f…c31e', time:'5 min ago'  },
-  { hash:'0x7d1b…9a3c', time:'12 min ago' },
-  { hash:'0x2e5c…f88a', time:'31 min ago' },
-  { hash:'0x9f3a…2b1d', time:'1 hr ago'   },
-];
-
-export default function Marketplace() {
-  const { isConnected, connect } = useWallet();
+export default function Marketplace({ demoMode = false }) {
+  const { isConnected, connect, account } = useWallet();
   const toast = useToast();
-  const pageRef = useReveal();
+  const navigate = useNavigate();
   const chartRef = useRef(null);
-  const [sellAsset, setSellAsset] = useState('FXRP');
-  const [sellAmt, setSellAmt]     = useState('');
-  const [minPrice, setMinPrice]   = useState('');
-  const [trades, setTrades]       = useState(TRADES);
-  const [priceStr, setPriceStr]   = useState('$0.5214');
+  const [sellAsset, setSellAsset]   = useState('FXRP');
+  const [sellAmt, setSellAmt]       = useState('');
+  const [minPrice, setMinPrice]     = useState('');
+  const [trades, setTrades]         = useState(demoMode ? DEMO_TRADES : []);
+  const [tradesLoading, setTradesLoading] = useState(!demoMode);
+  const [settlements, setSettlements]         = useState(demoMode ? DEMO_SETTLEMENTS : []);
+  const [settlementsLoading, setSettlementsLoading] = useState(!demoMode);
+  const [stats, setStats]           = useState(demoMode ? DEMO_STATS : null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadTrades = useCallback(async () => {
+    if (demoMode) return;
+    try { setTrades(await fetchListings()); }
+    catch (e) { toast('Couldn\'t load trades', e.message, 'error'); }
+    finally { setTradesLoading(false); }
+  }, [toast, demoMode]);
+
+  const loadSettlements = useCallback(async () => {
+    if (demoMode) return;
+    try { setSettlements(await fetchSettlements()); }
+    catch { /* non-critical */ }
+    finally { setSettlementsLoading(false); }
+  }, [demoMode]);
+
+  const loadStats = useCallback(async () => {
+    if (demoMode) return;
+    try { setStats(await fetchStats()); } catch { /* stats are non-critical, fail quietly */ }
+  }, [demoMode]);
+
+  useEffect(() => { loadTrades(); loadStats(); loadSettlements(); }, [loadTrades, loadStats, loadSettlements]);
+
+  useEffect(() => {
+    if (demoMode) return;
+    const id = setInterval(() => { loadTrades(); loadStats(); loadSettlements(); }, 15000);
+    return () => clearInterval(id);
+  }, [loadTrades, loadStats, loadSettlements, demoMode]);
 
   useEffect(() => {
     const canvas = chartRef.current;
@@ -36,7 +76,7 @@ export default function Marketplace() {
       const H = 200;
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
-      const data = []; let p = 0.52;
+      const data = []; let p = stats?.priceUsd || 0.52;
       for (let i=0;i<80;i++) { p += (Math.random()-0.49)*0.004; p=Math.max(0.44,Math.min(0.62,p)); data.push(p); }
       const min=Math.min(...data),max=Math.max(...data),range=max-min||0.01;
       const toY = v => H*0.1+((max-v)/range)*(H*0.8);
@@ -55,32 +95,38 @@ export default function Marketplace() {
     draw();
     window.addEventListener('resize', draw);
     return () => window.removeEventListener('resize', draw);
-  }, []);
+  }, [stats]);
 
-  // Tick price
-  useEffect(() => {
-    const id = setInterval(() => {
-      const v = 0.5214 + (Math.random()-0.5)*0.002;
-      setPriceStr('$'+v.toFixed(4));
-    }, 3000);
-    return () => clearInterval(id);
-  }, []);
-
-  const submitOrder = () => {
+  const submitOrder = async () => {
+    if (demoMode) { navigate('/marketplace'); return; }
     if (!isConnected) { connect(); return; }
-    if (!sellAmt || parseFloat(sellAmt)<=0) { toast('Invalid Amount','Enter a valid amount.','error'); return; }
-    toast('Order Submitted', 'Private order queued. Matching in progress…', 'success');
-    const newId = 'LX-'+(8825+trades.length);
-    setTrades(t => [{ id:newId, matched:false, time:'just now' }, ...t]);
-    setTimeout(() => {
-      setTrades(t => t.map(tr => tr.id===newId?{...tr,matched:true,time:'1 min ago'}:tr));
-      toast('Trade Matched','Your order has been matched.','success');
-    }, 6000);
-    setSellAmt(''); setMinPrice('');
+    if (!sellAmt || parseFloat(sellAmt) <= 0) { toast('Invalid amount', 'Enter a valid amount.', 'error'); return; }
+    if (!minPrice || parseFloat(minPrice) <= 0) { toast('Invalid price', 'Enter a minimum price.', 'error'); return; }
+    setSubmitting(true);
+    try {
+      await createOrder({ asset: sellAsset, amount: sellAmt, minPrice, sellerAddress: account });
+      toast('Order submitted', 'Private order queued. Matching in progress…', 'success');
+      setSellAmt(''); setMinPrice('');
+      loadTrades();
+    } catch (e) {
+      toast('Order failed', e.message, 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  const priceStr = stats ? `$${stats.priceUsd.toFixed(4)}` : '—';
+
   return (
-    <div ref={pageRef} className="page-content" style={{ paddingTop:'var(--navbar-h)', minHeight:'100vh' }}>
+    <div className="page-content" style={{ paddingTop: demoMode ? 'calc(var(--navbar-h) + 46px)' : 'var(--navbar-h)', minHeight:'100vh' }}>
+      {demoMode && (
+        <div className="dashboard-demo-banner">
+          <Icn name="zap" size={15} />
+          <span>You're viewing a preview with sample data — nothing here is real.</span>
+          <Link to="/marketplace" className="btn btn-gold btn-sm">View Live Marketplace</Link>
+        </div>
+      )}
+
       <div className="container" style={{ paddingTop:48, paddingBottom:80 }}>
         {/* Header */}
         <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:40,flexWrap:'wrap',gap:16 }}>
@@ -92,6 +138,11 @@ export default function Marketplace() {
           <div style={{ display:'flex',alignItems:'center',gap:8,marginTop:8 }}>
             <span style={{ width:8,height:8,borderRadius:'50%',background:'var(--green)',boxShadow:'0 0 8px var(--green)',display:'inline-block',animation:'ping 1.5s ease-in-out infinite' }} />
             <span style={{ fontSize:13,fontWeight:600,color:'var(--green)' }}>Live — Coston2</span>
+            {!demoMode && apiMode === 'mock' && (
+              <span className="badge" style={{ fontSize:11, color:'var(--text-muted)', borderColor:'var(--border-card)' }} title="No backend configured yet. Set VITE_API_BASE_URL to go live.">
+                no backend connected
+              </span>
+            )}
           </div>
         </div>
 
@@ -107,10 +158,10 @@ export default function Marketplace() {
         {/* Stats row */}
         <div className="otc-stats-grid">
           {[
-            {label:'FXRP Price',      val:priceStr},
-            {label:'24h OTC Volume',  val:'$284K'},
-            {label:'Trades Settled',  val:'142'},
-            {label:'Pending Matches', val:'7'},
+            {label:'FXRP Price',      val: priceStr},
+            {label:'24h OTC Volume',  val: stats ? `$${(stats.volume24hUsd/1000).toFixed(0)}K` : '—'},
+            {label:'Trades Settled',  val: stats ? String(stats.tradesSettled) : '—'},
+            {label:'Pending Matches', val: String(trades.filter(t=>t.status==='pending').length)},
           ].map(s => (
             <div key={s.label} style={{ background:'var(--bg-secondary)',padding:'20px 24px',textAlign:'center' }}>
               <div style={{ fontSize:26,fontWeight:800,letterSpacing:'-0.02em',marginBottom:4 }}>{s.val}</div>
@@ -121,7 +172,7 @@ export default function Marketplace() {
 
         {/* Chart + Trades */}
         <div className="otc-main-grid">
-          <div className="card reveal">
+          <div className="card">
             <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:20 }}>
               <div>
                 <div style={{ fontSize:13,color:'var(--text-muted)',marginBottom:4 }}>FXRP / USD</div>
@@ -134,10 +185,25 @@ export default function Marketplace() {
 
           <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
             <div style={{ fontSize:11,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--text-muted)' }}>Active Trades</div>
-            {trades.map(t => (
+            {tradesLoading ? (
+              <div className="card" style={{ padding:'32px 20px', textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>Loading trades…</div>
+            ) : trades.length === 0 ? (
+              <div className="card" style={{ padding:'32px 20px', textAlign:'center', color:'var(--text-muted)', fontSize:13 }}>
+                No active trades yet.
+                {!demoMode && <div style={{ marginTop:10 }}><Link to="/marketplace-demo" style={{ color:'var(--gold)', fontWeight:600, fontSize:12.5 }}>See what an active marketplace looks like →</Link></div>}
+              </div>
+            ) : trades.map(t => (
               <div key={t.id} className="card" style={{ padding:'16px 20px' }}>
                 <div style={{ fontSize:10,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--text-muted)',marginBottom:12 }}># {t.id}</div>
-                {['Seller','Buyer','Amount','Price'].map(k=>(
+                <div className="otc-row">
+                  <span className="otc-key">Asset</span>
+                  <span style={{ fontSize:13, fontWeight:600 }}>{t.asset}</span>
+                </div>
+                <div className="otc-row">
+                  <span className="otc-key">Amount</span>
+                  <span style={{ fontSize:13, color:'var(--text-secondary)' }}>{t.amountRange}</span>
+                </div>
+                {['Seller','Buyer','Price'].map(k=>(
                   <div key={k} className="otc-row">
                     <span className="otc-key">{k}</span>
                     <span className="otc-val-hidden">{'█'.repeat(10)}</span>
@@ -145,11 +211,11 @@ export default function Marketplace() {
                 ))}
                 <div className="otc-row">
                   <span className="otc-key">Status</span>
-                  <span style={{ color:t.matched?'var(--green)':'var(--gold)',fontWeight:700,fontSize:12 }}>{t.matched?'✓ Matched':'⧖ Pending'}</span>
+                  <span style={{ color:t.status==='matched'||t.status==='settled'?'var(--green)':'var(--gold)',fontWeight:700,fontSize:12 }}>{t.status==='matched'?'✓ Matched':t.status==='settled'?'✓ Settled':t.status==='cancelled'?'Cancelled':'⧖ Pending'}</span>
                 </div>
                 <div className="otc-row">
                   <span className="otc-key">Time</span>
-                  <span style={{ color:'var(--text-muted)',fontSize:12 }}>{t.time}</span>
+                  <span style={{ color:'var(--text-muted)',fontSize:12 }}>{timeAgo(t.createdAt)}</span>
                 </div>
               </div>
             ))}
@@ -157,11 +223,20 @@ export default function Marketplace() {
         </div>
 
         {/* Listing form — gated behind wallet connection; rest of the marketplace stays public */}
-        <div className="card reveal" style={{ marginBottom:32 }}>
+        <div className="card" style={{ marginBottom:32 }}>
           <h2 style={{ fontSize:22,fontWeight:700,marginBottom:8 }}>List a Private Sale</h2>
           <p style={{ color:'var(--text-secondary)',fontSize:14,marginBottom:24 }}>Identity and amount remain hidden throughout the match process.</p>
 
-          {!isConnected ? (
+          {demoMode ? (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:16, padding:'32px 16px', background:'var(--bg-secondary)', borderRadius:'var(--radius-md)', border:'1px dashed var(--border-card)' }}>
+              <div style={{ color:'var(--gold)' }}><Icn name="lock" size={26} /></div>
+              <div>
+                <div style={{ fontWeight:700, marginBottom:4 }}>This is a preview</div>
+                <div style={{ fontSize:13, color:'var(--text-muted)' }}>Head to the live marketplace to actually list an asset.</div>
+              </div>
+              <button className="btn btn-gold" onClick={submitOrder} id="otc-demo-goto-btn">Go to Live Marketplace</button>
+            </div>
+          ) : !isConnected ? (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:16, padding:'32px 16px', background:'var(--bg-secondary)', borderRadius:'var(--radius-md)', border:'1px dashed var(--border-card)' }}>
               <div style={{ color:'var(--gold)' }}><Icn name="lock" size={26} /></div>
               <div>
@@ -184,39 +259,48 @@ export default function Marketplace() {
                   </div>
                 ))}
               </div>
-              <button className="btn btn-primary" onClick={submitOrder} id="otc-submit-btn">Submit Private Order</button>
+              <button className="btn btn-primary" onClick={submitOrder} disabled={submitting} id="otc-submit-btn">{submitting ? 'Submitting…' : 'Submit Private Order'}</button>
             </>
           )}
         </div>
 
         {/* Settlement table */}
-        <div className="card reveal">
+        <div className="card">
           <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24 }}>
             <h2 style={{ fontSize:20,fontWeight:700 }}>Recent Settlements</h2>
             <span className="badge badge-green"><span className="badge-dot" />On-Chain</span>
           </div>
-          <div style={{ overflowX:'auto' }}>
-            <table style={{ width:'100%',borderCollapse:'collapse' }}>
-              <thead>
-                <tr>{['Tx Hash','Seller','Buyer','Amount','Price','Time','Status'].map(h=>(
-                  <th key={h} style={{ textAlign:'left',fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-muted)',padding:'0 16px 12px 0',borderBottom:'1px solid var(--border-subtle)' }}>{h}</th>
-                ))}</tr>
-              </thead>
-              <tbody>
-                {SETTLEMENTS.map(s => (
-                  <tr key={s.hash}>
-                    <td style={{ padding:'14px 16px 14px 0',fontSize:13,color:'var(--blue)',fontFamily:'monospace',borderBottom:'1px solid var(--border-subtle)' }}>{s.hash}</td>
-                    <td style={{ padding:'14px 16px 14px 0',borderBottom:'1px solid var(--border-subtle)' }}><span className="otc-val-hidden">{'█'.repeat(8)}</span></td>
-                    <td style={{ padding:'14px 16px 14px 0',borderBottom:'1px solid var(--border-subtle)' }}><span className="otc-val-hidden">{'█'.repeat(8)}</span></td>
-                    <td style={{ padding:'14px 16px 14px 0',fontSize:13,color:'var(--text-muted)',borderBottom:'1px solid var(--border-subtle)' }}>**** FXRP</td>
-                    <td style={{ padding:'14px 16px 14px 0',fontSize:13,color:'var(--text-muted)',borderBottom:'1px solid var(--border-subtle)' }}>$***.**</td>
-                    <td style={{ padding:'14px 16px 14px 0',fontSize:12,color:'var(--text-muted)',borderBottom:'1px solid var(--border-subtle)' }}>{s.time}</td>
-                    <td style={{ padding:'14px 0',borderBottom:'1px solid var(--border-subtle)' }}><span className="badge badge-green">Settled</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {settlementsLoading ? (
+            <div style={{ textAlign:'center', color:'var(--text-muted)', fontSize:13, padding:'24px 0' }}>Loading settlements…</div>
+          ) : settlements.length === 0 ? (
+            <div style={{ textAlign:'center', color:'var(--text-muted)', fontSize:13, padding:'24px 0' }}>
+              No settlements yet.
+              {!demoMode && <div style={{ marginTop:10 }}><Link to="/marketplace-demo" style={{ color:'var(--gold)', fontWeight:600, fontSize:12.5 }}>See sample settlements in the demo →</Link></div>}
+            </div>
+          ) : (
+            <div style={{ overflowX:'auto' }}>
+              <table style={{ width:'100%',borderCollapse:'collapse' }}>
+                <thead>
+                  <tr>{['Tx Hash','Seller','Buyer','Amount','Price','Time','Status'].map(h=>(
+                    <th key={h} style={{ textAlign:'left',fontSize:11,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-muted)',padding:'0 16px 12px 0',borderBottom:'1px solid var(--border-subtle)' }}>{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody>
+                  {settlements.map(s => (
+                    <tr key={s.hash}>
+                      <td style={{ padding:'14px 16px 14px 0',fontSize:13,color:'var(--blue)',fontFamily:'monospace',borderBottom:'1px solid var(--border-subtle)' }}>{s.hash}</td>
+                      <td style={{ padding:'14px 16px 14px 0',borderBottom:'1px solid var(--border-subtle)' }}><span className="otc-val-hidden">{'█'.repeat(8)}</span></td>
+                      <td style={{ padding:'14px 16px 14px 0',borderBottom:'1px solid var(--border-subtle)' }}><span className="otc-val-hidden">{'█'.repeat(8)}</span></td>
+                      <td style={{ padding:'14px 16px 14px 0',fontSize:13,color:'var(--text-muted)',borderBottom:'1px solid var(--border-subtle)' }}>{s.amountRange} {s.asset}</td>
+                      <td style={{ padding:'14px 16px 14px 0',fontSize:13,color:'var(--text-muted)',borderBottom:'1px solid var(--border-subtle)' }}>$***.**</td>
+                      <td style={{ padding:'14px 16px 14px 0',fontSize:12,color:'var(--text-muted)',borderBottom:'1px solid var(--border-subtle)' }}>{timeAgo(s.settledAt)}</td>
+                      <td style={{ padding:'14px 0',borderBottom:'1px solid var(--border-subtle)' }}><span className="badge badge-green">Settled</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
