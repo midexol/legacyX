@@ -213,11 +213,12 @@ deployed this way — the frontend is client-side and can be hosted anywhere (or
    contracts — see "Chain integration" above.
 6. Grab the service's `.onrender.com` URL and set it as `VITE_API_BASE_URL` wherever the frontend runs.
 
-**What's verified vs. not:** the Postgres migration SQL was generated via `prisma migrate diff` (schema →
-empty, the same translation Prisma's own tooling does) and the schema/build were validated locally, but
-there's no Postgres available in this dev environment to actually run `prisma migrate deploy` against a live
-database before this reaches Render. The first real deploy is the first real test of that step — if it fails,
-the Render build/start logs will show exactly which statement didn't apply.
+**Confirmed working on a live deploy** (`https://legacyx.onrender.com`, 2026-08-05): `prisma migrate deploy`
+applied cleanly against a real Postgres instance, and `/health`, `/api/orders`, `/api/stats`, and
+`/api/settlements` all responded correctly against it. One real bug surfaced and got fixed in the process:
+plain `npm install` was silently skipping `@types/*` devDependencies with `NODE_ENV=production` set, breaking
+the `tsc` build — hence `--include=dev` in `buildCommand` above. If you hit `tsc`/type-related build failures
+that don't reproduce locally, that's the first thing to check.
 
 Free-tier notes: the web service spins down after 15 minutes of inactivity (the first request after that
 takes about a minute to wake it back up — the caller sees a loading page, not a fast response), and Render's
