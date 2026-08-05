@@ -1,19 +1,18 @@
 // LegacyX backend data model
-// SQLite is used for zero-config hackathon development.
-// To move to Postgres for a shared/staging environment: change `provider` to
-// "postgresql", point DATABASE_URL at a Postgres instance, re-run
-// `npm run prisma:migrate`, and (optionally) promote the status/type/side
-// String fields below back into real `enum` blocks — SQLite's connector
-// doesn't support enums, which is why they're plain validated strings here.
-// The application layer (zod schemas + services) already enforces the valid
-// value sets, so behavior is unaffected either way.
+// Postgres (Render-managed in production — see render.yaml at the repo
+// root). Previously SQLite; migrated for Render hosting, since free-tier
+// services don't have a persistent disk for a SQLite file to survive on.
+// status/type/side fields stayed plain validated strings rather than being
+// promoted to real Prisma enums, to keep this migration a pure provider
+// swap — the application layer (zod schemas + services) already enforces
+// the valid value sets, so behavior is unaffected either way.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -191,4 +190,73 @@ model OtcTrade {
   orders OtcOrder[]
 
   @@map("otc_trades")
+}
+
+// --- Public Marketplace (frontend/API_CONTRACT.md) -------------------------
+// A second, separate OTC-shaped system from OtcOrder/OtcTrade above. Those
+// model an authenticated BUY/SELL crossing engine under /api/otc/* that
+// nothing in the current frontend calls. These model the public, unauth'd
+// contract the Vite frontend's Marketplace page actually calls today
+// (GET/POST /api/orders, GET /api/stats, GET /api/settlements) — sell-only
+// listings that get matched against a simulated counterparty rather than a
+// real order book. The two systems are intentionally left separate rather
+// than merged, since reconciling them (or retiring one) is a product call,
+// not something to guess at while just adding hosting — see backend/README.md.
+
+model MarketplaceOrder {
+  // Internal sequential id, used only to derive the public "LX-XXXX" id
+  // (see src/utils/publicId.ts) — never exposed directly.
+  seq Int @id @default(autoincrement())
+
+  /// One of: FXRP | FLR | C2FLR
+  asset String
+
+  // Amount and prices are decimal strings (not floats) to avoid precision
+  // loss — see src/utils/decimal.ts for safe parsing/comparison.
+  amount String
+
+  minPrice String
+
+  sellerAddress String
+  buyerAddress  String?
+  matchedPrice  String?
+
+  /// One of: pending | matched | settled | cancelled
+  status String @default("pending")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  matchedAt DateTime?
+
+  settlement MarketplaceSettlement?
+
+  @@map("marketplace_orders")
+}
+
+model MarketplaceSettlement {
+  id String @id @default(cuid())
+
+  orderSeq Int              @unique
+  order    MarketplaceOrder @relation(fields: [orderSeq], references: [seq])
+
+  asset  String
+  amount String
+  price  String
+  txHash String
+
+  settledAt DateTime @default(now())
+
+  @@map("marketplace_settlements")
+}
+
+// Single-row table holding the simulated market price. Nudged periodically
+// by a background tick (src/services/marketplaceStats.service.ts) so
+// GET /api/stats has something to show without a real Flare/FTSO price feed
+// integration.
+model MarketplaceStat {
+  id        Int      @id @default(1)
+  priceUsd  Float
+  updatedAt DateTime @updatedAt
+
+  @@map("marketplace_stats")
 }

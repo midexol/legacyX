@@ -10,7 +10,7 @@ const envSchema = z.object({
   ADMIN_API_KEY: z.string().min(1),
   VERIFICATION_INTERVAL_SECONDS: z.coerce.number().int().positive().default(30),
   MATCHING_INTERVAL_SECONDS: z.coerce.number().int().positive().default(15),
-  FRONTEND_ORIGIN: z.string().default("http://localhost:3000"),
+  FRONTEND_ORIGIN: z.string().default("http://localhost:5173"),
 
   // Chain integration (contracts/ — LegacyVault). Optional: vaults without a
   // linked contractAddress keep using the pure off-chain simulation in
@@ -23,6 +23,14 @@ const envSchema = z.object({
   RPC_URL_BY_CHAIN_ID: z.string().optional(),
   OPERATOR_PRIVATE_KEY: z.string().optional(),
   TRUSTED_VERIFIER_PRIVATE_KEY: z.string().optional(),
+
+  // Public Marketplace (frontend/API_CONTRACT.md) matching simulation —
+  // simulated delay before a pending order "finds a buyer", and before a
+  // matched order "settles on-chain". Lower these for faster demos. Separate
+  // from MATCHING_INTERVAL_SECONDS above, which is the sweep's cadence and
+  // is shared with the older /api/otc engine.
+  MARKETPLACE_MATCH_DELAY_MS: z.coerce.number().int().nonnegative().default(20_000),
+  MARKETPLACE_SETTLE_DELAY_MS: z.coerce.number().int().nonnegative().default(20_000),
 });
 
 const parsed = envSchema.safeParse(process.env);

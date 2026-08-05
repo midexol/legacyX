@@ -11,6 +11,9 @@ import vaultRoutes from "./routes/vault.routes";
 import claimRoutes from "./routes/claim.routes";
 import otcRoutes from "./routes/otc.routes";
 import conditionActionsRoutes from "./routes/condition-actions.routes";
+import ordersRoutes from "./routes/orders.routes";
+import statsRoutes from "./routes/stats.routes";
+import settlementsRoutes from "./routes/settlements.routes";
 
 export function createApp() {
   const app = express();
@@ -26,6 +29,11 @@ export function createApp() {
   app.use("/api/claims", claimRoutes);
   app.use("/api/otc", otcRoutes);
   app.use("/api/conditions", conditionActionsRoutes);
+  // Public Marketplace (frontend/API_CONTRACT.md) — separate from /api/otc
+  // above, see the comment in prisma/schema.prisma for why.
+  app.use("/api/orders", ordersRoutes);
+  app.use("/api/stats", statsRoutes);
+  app.use("/api/settlements", settlementsRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

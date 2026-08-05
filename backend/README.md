@@ -5,25 +5,30 @@ REST API, database, and inheritance-condition/OTC-matching engine for LegacyX. T
 ## Stack
 
 - **Express + TypeScript** — REST API
-- **Prisma + SQLite** — zero-config local database (swap to Postgres for shared/staging, see below)
+- **Prisma + Postgres** — database (Render-managed in production, see "Deploying to Render" below)
 - **JWT + EIP-191 wallet signatures** — auth (no passwords; you sign in with your wallet)
-- **node-cron** — background verification sweep + OTC matching engine
+- **node-cron** — background verification sweep, OTC matching engine, and public marketplace simulation
 - **Vitest + Supertest** — tests
 
 ## Getting started
 
+You need a reachable Postgres database — either a local instance or a free one from Render (dashboard ->
+New -> PostgreSQL, then copy the "External Database URL").
+
 ```bash
 cd backend
 npm install
-cp .env.example .env
-npm run prisma:migrate -- --name init   # creates dev.db and applies the schema
+cp .env.example .env        # then set DATABASE_URL to your Postgres connection string
+npm run prisma:migrate -- --name init   # applies the schema
 npm run seed                            # optional demo data (see prisma/seed.ts)
 npm run dev                             # http://localhost:4000
 ```
 
-Run the test suite (spins up its own `test.db`, independent of your dev database):
+Run the test suite — it needs its **own** dedicated Postgres database (never point it at dev/production; see
+`tests/globalSetup.ts`, which fully resets whatever `TEST_DATABASE_URL` points to before every run):
 
 ```bash
+echo 'TEST_DATABASE_URL="postgresql://user:password@localhost:5432/legacyx_test?schema=public"' > .env.test
 npm test
 ```
 
@@ -138,29 +143,106 @@ Claim signature message: `` Claim inheritance payout from vault ${vaultId} as be
 
 The matching engine runs price-time priority: best (lowest) open sell crossed against best (highest) open buy, filling the smaller order in full and reducing the larger order's remaining amount, at the earlier-placed order's price. It also runs on a timer (`MATCHING_INTERVAL_SECONDS`) so orders left unmatched still settle eventually.
 
+### Public Marketplace API
+
+A **second, separate** OTC-shaped system from the one above. `frontend/API_CONTRACT.md` is the spec the
+current Vite frontend's Marketplace page is actually built against (`frontend/src/lib/api.js`,
+`frontend/src/pages/Marketplace.jsx`) — and it doesn't call any of the `/api/otc/*` endpoints described
+above. Rather than retrofit those (auth-required, BUY/SELL crossing book) to match a public, unauth'd,
+sell-only contract shape, this is a small, additive module living alongside it. **Reconciling or retiring
+one of the two is a product decision for the team, not something this backend track should resolve alone**
+— see the comment at the top of `prisma/schema.prisma`.
+
+| Method & path | Auth | Notes |
+|---|---|---|
+| `GET /api/orders` | — | Public, **redacted** order book. No address, exact amount, or price — only a bucketed `amountRange`. |
+| `POST /api/orders` | — | Creates a sell listing: `{ asset, amount, minPrice, sellerAddress }` (amount/minPrice as decimal **strings**). Returns the redacted shape, `201`. |
+| `GET /api/orders/mine?address=0x...` | — | Full, unredacted detail for that address's own orders (seller or matched buyer). |
+| `GET /api/stats` | — | `{ priceUsd, volume24hUsd, tradesSettled }` for the stats row. |
+| `GET /api/settlements` | — | Public, redacted settlement history: `{ hash, asset, amountRange, settledAt }`. |
+
+**Auth note (flagged in the contract, not fixed here):** `sellerAddress` on `POST /api/orders` and `address`
+on `GET /api/orders/mine` are trusted as-is — nothing verifies the caller actually controls that wallet.
+That's an explicitly-allowed placeholder for the hackathon; before this goes anywhere real, gate both behind
+proof of address ownership — the existing `/api/auth` wallet-signature flow above could be reused for this
+once the frontend is ready to send a token here.
+
+**Matching/settlement** is simulated the same way as the `/api/otc/*` engine, just contract-shaped: a
+`pending` order older than `MARKETPLACE_MATCH_DELAY_MS` "finds a buyer" (mock buyer address, a `matchedPrice`
+at or above the seller's `minPrice`) and becomes `matched`; a `matched` order older than
+`MARKETPLACE_SETTLE_DELAY_MS` "settles on-chain" (a settlement record with a mock tx hash) and becomes
+`settled`. Runs on the same cron tick as the OTC matching engine (`src/jobs/scheduler.ts`). `amount`/
+`minPrice`/`matchedPrice` are decimal **strings**, validated and compared via BigInt fixed-point arithmetic
+(`src/utils/decimal.ts`) rather than `parseFloat`, per the contract. `GET /api/stats`'s `priceUsd` is nudged
+by a small bounded random walk on the same tick (no real Flare/FTSO price feed integration); `volume24hUsd`
+and `tradesSettled` are computed live from settlement records, so a fresh database starts at `0` — no seed/
+fake data.
+
 ## Environment variables
 
 See `.env.example`. Notable ones:
 - `ADMIN_API_KEY` — shared secret for the trusted-verifier endpoints (`MANUAL_APPROVAL`/`LEGAL_DOCUMENT` verification). Treat like a password; rotate before any real deployment.
-- `VERIFICATION_INTERVAL_SECONDS` / `MATCHING_INTERVAL_SECONDS` — background sweep cadence.
-- `DATABASE_URL` — `file:./dev.db` by default. For Postgres, change `provider` in `prisma/schema.prisma` to `"postgresql"` and point this at a real instance (the schema deliberately avoids SQLite-only features, and enum-like fields are plain validated strings for the same reason — see the comment at the top of `schema.prisma`).
+- `DATABASE_URL` — Postgres connection string. Local dev, tests (as `TEST_DATABASE_URL`), and production each point at a *different* database.
+- `VERIFICATION_INTERVAL_SECONDS` / `MATCHING_INTERVAL_SECONDS` — background sweep cadence (shared by the verification sweep, `/api/otc/*` matching, and the public marketplace sweep).
+- `MARKETPLACE_MATCH_DELAY_MS` / `MARKETPLACE_SETTLE_DELAY_MS` — simulated delay before the public marketplace's pending→matched and matched→settled transitions. Lower for faster demos.
+- `RPC_URL_BY_CHAIN_ID` / `OPERATOR_PRIVATE_KEY` / `TRUSTED_VERIFIER_PRIVATE_KEY` — optional chain integration, see "Chain integration" above.
+
+## Deploying to Render
+
+`render.yaml` at the repo root is a [Render Blueprint](https://render.com/docs/blueprint-spec) that provisions
+this API as a Web Service plus a managed Postgres database, wired together automatically. Only the backend is
+deployed this way — the frontend is client-side and can be hosted anywhere (or run locally) pointing
+`VITE_API_BASE_URL` at this service.
+
+1. Push this repo to GitHub (Render deploys from a git remote).
+2. Render dashboard → **New** → **Blueprint** → select the repo. Render reads `render.yaml` and shows a
+   preview of the `legacyx-backend` web service + `legacyx-db` Postgres database it's about to create.
+   `JWT_SECRET` and `ADMIN_API_KEY` are auto-generated by Render (`generateValue: true`) — you don't set
+   those yourself.
+3. Apply. Render provisions the database first, then builds and starts the web service. The build runs
+   `npm install && npm run build` (`postinstall` runs `prisma generate`); the start command runs
+   `npx prisma migrate deploy` (applying `prisma/migrations/` to the fresh database) before `npm start`.
+4. Once your frontend is deployed somewhere, set `FRONTEND_ORIGIN` on the `legacyx-backend` service (Render
+   dashboard → service → Environment) to that origin — it's left blank in `render.yaml` (`sync: false`)
+   since it's not known until the frontend has a URL. Without this, the browser's CORS preflight to
+   `/api/*` will fail from the deployed frontend.
+5. **Optional — chain integration:** `RPC_URL_BY_CHAIN_ID`, `OPERATOR_PRIVATE_KEY`, and
+   `TRUSTED_VERIFIER_PRIVATE_KEY` are left unset (`sync: false`) by the Blueprint. Leave them unset to keep
+   every vault on the pure off-chain simulation, or fill them in via the dashboard (never commit real keys)
+   if you want this deployed instance to actually sign transactions against the live Coston2/Base Sepolia
+   contracts — see "Chain integration" above.
+6. Grab the service's `.onrender.com` URL and set it as `VITE_API_BASE_URL` wherever the frontend runs.
+
+**What's verified vs. not:** the Postgres migration SQL was generated via `prisma migrate diff` (schema →
+empty, the same translation Prisma's own tooling does) and the schema/build were validated locally, but
+there's no Postgres available in this dev environment to actually run `prisma migrate deploy` against a live
+database before this reaches Render. The first real deploy is the first real test of that step — if it fails,
+the Render build/start logs will show exactly which statement didn't apply.
+
+Free-tier notes: the web service spins down after 15 minutes of inactivity (the first request after that
+takes about a minute to wake it back up — the caller sees a loading page, not a fast response), and Render's
+free Postgres databases expire 30 days after creation (with a 14-day grace period before actual deletion) —
+recreate the Blueprint's database resource (or upgrade the plan) before then if you want this to stay up
+long-term.
 
 ## Project layout
 
 ```
 backend/
+├── (repo root) render.yaml   # Render Blueprint: web service + managed Postgres
 ├── prisma/
-│   ├── schema.prisma      # data model
+│   ├── schema.prisma      # data model — see the comment above OtcOrder/MarketplaceOrder for why there are two OTC-shaped systems
 │   ├── migrations/
 │   └── seed.ts            # demo data matching the brief's Alice/mother/brother/daughter example
 ├── src/
 │   ├── app.ts             # express app wiring
 │   ├── index.ts           # entrypoint: http server + scheduler + graceful shutdown
+│   ├── chain/              # LegacyVault contract client (RPC, ABI) for chain-linked vaults
 │   ├── config/env.ts      # validated environment config
 │   ├── db/prisma.ts       # PrismaClient singleton
-│   ├── jobs/scheduler.ts  # cron: verification sweep + OTC matching
+│   ├── jobs/scheduler.ts  # cron: verification sweep + OTC matching + marketplace sweep
 │   ├── middleware/        # auth (JWT/admin-key), validation, error handling
-│   ├── routes/ · controllers/ · services/   # one pair per resource (vault, beneficiary, condition, claim, otc, auth)
-│   └── utils/             # ApiError, mock tx hashes, signature verification, JWT
-└── tests/                 # vitest + supertest, own sqlite db (tests/globalSetup.ts)
+│   ├── routes/ · controllers/ · services/   # one pair per resource (vault, beneficiary, condition, claim, otc, auth, orders/stats/settlements)
+│   └── utils/             # ApiError, mock tx/address, signature verification, JWT, decimal-safe math, public id mapping
+└── tests/                 # vitest + supertest, own dedicated Postgres db (tests/globalSetup.ts)
 ```

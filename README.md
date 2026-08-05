@@ -53,17 +53,19 @@ LegacyX combines four familiar concepts into one on-chain platform:
 ## Tech Stack
 
 - **Smart Contracts:** Solidity (Foundry), multichain — Flare Coston2 Testnet primary, plus additional EVM testnets bridged via LayerZero V2 so an owner's vaults across chains stay in sync and beneficiaries can claim on their own chain
-- **Backend:** REST APIs, database, verification logic (Flare service integrations, mocked where needed for the hackathon)
-- **Frontend:** Web app with wallet integration, dashboard, deposit/beneficiary flows, and private OTC interface
+- **Backend:** Express + TypeScript REST APIs, Prisma + Postgres database, verification logic (Flare service integrations, mocked where needed for the hackathon), wired to the contracts above for the actions a third party can legitimately sign — deployable to Render via `render.yaml`
+- **Frontend:** Vite + React web app with wallet integration, dashboard, vault creation flow, unlock demo, and the private OTC marketplace UI
 - **Design:** Figma prototype, UI/UX
 
 ## Repository Structure
 
 ```
 legacyX/
+├── render.yaml    # Render Blueprint: deploys backend/ + a managed Postgres together
 ├── contracts/     # Legacy Vault & OTC smart contracts, deployment scripts, tests
 ├── backend/       # REST APIs, database, verification & Flare integrations
-├── frontend/      # Web application (wallet connect, dashboard, vault, OTC UI)
+├── frontend/      # Vite + React web app (wallet connect, dashboard, vault, OTC UI)
+│   └── API_CONTRACT.md   # source of truth for the backend's public Marketplace API shapes
 ├── design/        # Figma exports, branding, user flows
 └── docs/          # Documentation, pitch deck, demo materials
 ```
@@ -83,13 +85,15 @@ legacyX/
 git clone https://github.com/midexol/legacyX.git
 cd legacyX
 
-# Frontend (Next.js)
+# Frontend (Vite + React)
 npm install --prefix frontend
+cp frontend/.env.example frontend/.env   # set VITE_API_BASE_URL to use the real backend
 npm run dev:frontend
 
-# Backend (Express + Prisma API)
+# Backend (Express + Prisma API) — needs a reachable Postgres database,
+# local or a free Render instance (see backend/README.md)
 npm run install:backend
-cp backend/.env.example backend/.env
+cp backend/.env.example backend/.env   # then set DATABASE_URL to your Postgres connection string
 npm run --prefix backend prisma:migrate -- --name init
 npm run --prefix backend seed
 npm run dev:backend
@@ -98,7 +102,7 @@ npm run dev:backend
 npm run dev:all
 ```
 
-The backend listens on `http://localhost:4000` by default (see `backend/.env.example`) and expects the frontend at `http://localhost:3000`. Full API reference and design notes: [backend/README.md](backend/README.md).
+The backend listens on `http://localhost:4000` by default (see `backend/.env.example`) and expects the frontend at `http://localhost:5173` (Vite's default). Leaving `VITE_API_BASE_URL` unset runs the frontend's Marketplace page entirely on local mock data — no backend required. Full API reference, Render deployment steps, and design notes: [backend/README.md](backend/README.md).
 
 ## Team
 
@@ -110,7 +114,8 @@ Built for a hackathon by a 5-person team covering smart contracts, backend, fron
 - [x] Inheritance condition verification (simulated → real-world data via Flare) — backend REST API + background sweep, see [backend/README.md](backend/README.md)
 - [x] Beneficiary claim flow — backend API (signature-verified lookup + claim)
 - [x] Private OTC marketplace contract + matching — backend off-chain matching engine (on-chain settlement contract still pending)
-- [ ] Full frontend integration (frontend currently uses local mock state; wiring it to the backend API is a separate task)
+- [x] Public Marketplace API (`GET/POST /api/orders`, `/api/stats`, `/api/settlements`) matching `frontend/API_CONTRACT.md` — the shape the current Vite frontend's Marketplace page actually calls, separate from the `/api/otc/*` engine above (see backend/README.md's "Public Marketplace API" section for why there are two)
+- [x] Render Blueprint for backend hosting (`render.yaml`, Postgres-backed) — ready to deploy, not yet confirmed against a live instance (see "Deploying to Render" in [backend/README.md](backend/README.md))
 - [ ] Testnet deployment (Flare Coston2)
 - [ ] Demo & hackathon submission
 
