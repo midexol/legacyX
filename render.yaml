@@ -17,7 +17,11 @@ services:
     plan: free
     region: oregon
     rootDir: backend
-    buildCommand: npm install && npm run build
+    # --include=dev is required even though NODE_ENV=production is set below
+    # (see envVars) — this is a TypeScript build, so devDependencies
+    # (typescript, @types/*) must install regardless of NODE_ENV, or `tsc`
+    # fails with "Could not find a declaration file" for every import.
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npx prisma migrate deploy && npm start
     healthCheckPath: /health
     envVars:
