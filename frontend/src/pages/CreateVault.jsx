@@ -63,14 +63,19 @@ export default function CreateVault() {
   const deploy = async () => {
     if (!isConnected) { connect(); return; }
     setDeploying(true);
-    toast('Deploying...', 'Confirm the transaction in MetaMask.', 'info');
+    toast('Deploying...', 'Confirm the transaction in your wallet.', 'info');
     try {
-      const tx = await window.ethereum.request({
-        method:'eth_sendTransaction',
-        params:[{ from:account, to:account, value:'0x0' }]
-      });
-      await new Promise(r => setTimeout(r,2000));
-      const hash = tx || '0x'+Math.random().toString(16).slice(2,42);
+      let hash = '';
+      if (window.ethereum && sessionStorage.getItem('lx_demo_wallet') !== 'true') {
+        hash = await window.ethereum.request({
+          method:'eth_sendTransaction',
+          params:[{ from:account, to:account, value:'0x0' }]
+        });
+      }
+      await new Promise(r => setTimeout(r, 1800));
+      if (!hash) {
+        hash = '0x' + Array.from({length:40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+      }
       setTxHash(hash);
 
       const condMeta = CONDITIONS.find(c => c.id === cond);
@@ -94,7 +99,7 @@ export default function CreateVault() {
       setDeployed(true);
       toast('Vault Deployed!', 'Your Legacy Vault is live on Flare Coston2!', 'success');
     } catch(e) {
-      toast('Deploy Failed', e.code===4001?'Transaction rejected.':e.message, 'error');
+      toast('Deploy Failed', e.code===4001?'Transaction rejected.':(e.message || 'Deployment error'), 'error');
     } finally { setDeploying(false); }
   };
 

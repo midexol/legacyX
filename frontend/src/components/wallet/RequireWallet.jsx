@@ -4,7 +4,7 @@ import WalletModal from '../layout/WalletModal';
 import Icn from '../ui/Icon';
 
 export default function RequireWallet({ children }) {
-  const { isConnected, connect, loading } = useWallet();
+  const { isConnected, connect, connectDemo, loading } = useWallet();
   const [modalOpen, setModalOpen] = useState(false);
 
   if (isConnected) return children;
@@ -39,6 +39,7 @@ export default function RequireWallet({ children }) {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onConnect={async () => { setModalOpen(false); await connect(); }}
+        onConnectDemo={() => { setModalOpen(false); connectDemo(); }}
       />
     </div>
   );

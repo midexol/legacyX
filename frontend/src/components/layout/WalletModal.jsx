@@ -2,19 +2,23 @@ import React from 'react';
 import Icn from '../ui/Icon';
 import '../../styles/components.css';
 
-export default function WalletModal({ open, onClose, onConnect }) {
+export default function WalletModal({ open, onClose, onConnect, onConnectDemo }) {
+  if (!open) return null;
+
   return (
     <div className={`modal-overlay${open ? ' open' : ''}`} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal">
         <button className="modal-close" onClick={onClose}>×</button>
-        <div style={{ textAlign:'center', marginBottom:28 }}>
-          <div style={{ width:64,height:64,background:'linear-gradient(135deg,#FFD166,#D4A017)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',color:'#211A0E',margin:'0 auto 16px' }}><Icn name="lock" size={28} /></div>
+        <div style={{ textAlign:'center', marginBottom:24 }}>
+          <div style={{ width:56,height:56,background:'linear-gradient(135deg,#FFD166,#D4A017)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',color:'#211A0E',margin:'0 auto 14px' }}>
+            <Icn name="lock" size={24} />
+          </div>
           <div className="modal-title">Connect Wallet</div>
           <div className="modal-sub">Connect your wallet to access your Legacy Vault on Flare Coston2</div>
         </div>
-        <div className="wallet-options">
-          <div className="wallet-option" onClick={onConnect} id="metamask-option">
-            <svg width="36" height="36" viewBox="0 0 212 189" style={{ flexShrink:0 }}>
+        <div className="wallet-options" style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          <div className="wallet-option" onClick={onConnect} id="metamask-option" style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <svg width="32" height="32" viewBox="0 0 212 189" style={{ flexShrink:0 }}>
               <polygon fill="#E17726" points="174,0 105,52 118,22"/>
               <polygon fill="#E27625" points="38,0 107,53 94,22"/>
               <polygon fill="#E27625" points="151,136 133,163 170,173 181,137"/>
@@ -29,12 +33,28 @@ export default function WalletModal({ open, onClose, onConnect }) {
               <polygon fill="#F6851B" points="145,100 107,105 109,126 127,152 146,139"/>
               <polygon fill="#161616" points="89,172 111,172 107,189"/>
             </svg>
-            <span className="wallet-option-name">MetaMask</span>
+            <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
+              <span className="wallet-option-name" style={{ fontWeight:600 }}>MetaMask</span>
+              <span style={{ fontSize:11, color:'var(--text-muted)' }}>Browser extension / Web3 wallet</span>
+            </div>
             <span className="wallet-option-arrow">→</span>
           </div>
-          <div className="wallet-option" style={{ opacity:0.4, cursor:'not-allowed' }}>
-            <div style={{ width:36,height:36,background:'linear-gradient(135deg,#3B99FC,#7B3FE4)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0 }}>⟠</div>
-            <span className="wallet-option-name">WalletConnect <span style={{ fontSize:11,opacity:0.5 }}>(coming soon)</span></span>
+
+          <div className="wallet-option" onClick={onConnectDemo} id="demo-wallet-option" style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:32,height:32,background:'linear-gradient(135deg,#00D68F,#00A86B)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:'#000',flexShrink:0 }}>⚡</div>
+            <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
+              <span className="wallet-option-name" style={{ fontWeight:600, color:'var(--text-primary)' }}>Demo Testnet Wallet</span>
+              <span style={{ fontSize:11, color:'var(--text-muted)' }}>Instant preview (no extension required)</span>
+            </div>
+            <span className="wallet-option-arrow">→</span>
+          </div>
+
+          <div className="wallet-option" style={{ display:'flex', alignItems:'center', gap:12, opacity:0.4, cursor:'not-allowed' }}>
+            <div style={{ width:32,height:32,background:'linear-gradient(135deg,#3B99FC,#7B3FE4)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0 }}>⟠</div>
+            <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
+              <span className="wallet-option-name">WalletConnect</span>
+              <span style={{ fontSize:11, color:'var(--text-muted)' }}>Coming soon</span>
+            </div>
             <span className="wallet-option-arrow">→</span>
           </div>
         </div>
@@ -43,3 +63,4 @@ export default function WalletModal({ open, onClose, onConnect }) {
     </div>
   );
 }
+

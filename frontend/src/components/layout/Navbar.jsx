@@ -6,12 +6,13 @@ import WalletModal from './WalletModal';
 import '../../styles/components.css';
 
 export default function Navbar() {
-  const { isConnected, account, connect, disconnect, shorten } = useWallet();
+  const { isConnected, account, connect, connectDemo, disconnect, shorten } = useWallet();
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -103,7 +104,12 @@ export default function Navbar() {
         )}
       </nav>
 
-      <WalletModal open={modalOpen} onClose={() => setModalOpen(false)} onConnect={async () => { setModalOpen(false); await connect(); }} />
+      <WalletModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConnect={async () => { setModalOpen(false); await connect(); }}
+        onConnectDemo={() => { setModalOpen(false); connectDemo(); }}
+      />
     </>
   );
 }
