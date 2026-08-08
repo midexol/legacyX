@@ -6,7 +6,11 @@ import WalletModal from './WalletModal';
 import '../../styles/components.css';
 
 export default function Navbar() {
-  const { isConnected, account, connect, connectDemo, disconnect, shorten } = useWallet();
+  const {
+    isConnected, account,
+    connectMetaMask, connectRabby, connectBrave, connectCoinbaseExt, connectWalletConnect, connectDemo,
+    disconnect, shorten,
+  } = useWallet();
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
   const [scrolled, setScrolled]   = useState(false);
@@ -107,8 +111,18 @@ export default function Navbar() {
       <WalletModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onConnect={async () => { setModalOpen(false); await connect(); }}
-        onConnectDemo={() => { setModalOpen(false); connectDemo(); }}
+        onConnectWallet={async (id) => {
+          const map = {
+            metamask:      connectMetaMask,
+            rabby:         connectRabby,
+            brave:         connectBrave,
+            'coinbase-ext': connectCoinbaseExt,
+            walletconnect: connectWalletConnect,
+            demo:          connectDemo,
+          };
+          const fn = map[id];
+          if (fn) await fn();
+        }}
       />
     </>
   );

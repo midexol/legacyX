@@ -4,10 +4,26 @@ import WalletModal from '../layout/WalletModal';
 import Icn from '../ui/Icon';
 
 export default function RequireWallet({ children }) {
-  const { isConnected, connect, connectDemo, loading } = useWallet();
+  const {
+    isConnected, loading,
+    connectMetaMask, connectRabby, connectBrave, connectCoinbaseExt, connectWalletConnect, connectDemo,
+  } = useWallet();
   const [modalOpen, setModalOpen] = useState(false);
 
   if (isConnected) return children;
+
+  const handleConnectWallet = async (id) => {
+    const map = {
+      metamask:       connectMetaMask,
+      rabby:          connectRabby,
+      brave:          connectBrave,
+      'coinbase-ext': connectCoinbaseExt,
+      walletconnect:  connectWalletConnect,
+      demo:           connectDemo,
+    };
+    const fn = map[id];
+    if (fn) await fn();
+  };
 
   return (
     <div className="page-content" style={{
@@ -31,15 +47,17 @@ export default function RequireWallet({ children }) {
           disabled={loading}
           id="gate-connect-btn"
         >
-          {loading ? 'Connecting…' : 'Connect Wallet'}
+          {loading ? 'Connecting...' : 'Connect Wallet'}
         </button>
       </div>
 
       <WalletModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onConnect={async () => { setModalOpen(false); await connect(); }}
-        onConnectDemo={() => { setModalOpen(false); connectDemo(); }}
+        onConnectWallet={async (id) => {
+          await handleConnectWallet(id);
+          setModalOpen(false);
+        }}
       />
     </div>
   );
