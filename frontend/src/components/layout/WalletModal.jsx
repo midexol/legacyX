@@ -11,26 +11,36 @@ const WALLET_REGISTRY = [
     detectKey: 'isMetaMask',
     installUrl: 'https://metamask.io/download/',
     icon: (
-      <svg width="36" height="36" viewBox="0 0 212 189" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <polygon fill="#E17726" points="174,0 105,52 118,22"/>
-        <polygon fill="#E27625" points="38,0 107,53 94,22"/>
-        <polygon fill="#E27625" points="151,136 133,163 170,173 181,137"/>
-        <polygon fill="#E27625" points="31,137 42,173 79,163 61,136"/>
-        <polygon fill="#E27625" points="77,83 66,100 103,102 102,62"/>
-        <polygon fill="#E27625" points="135,83 109,62 107,102 145,100"/>
-        <polygon fill="#D5BFB2" points="79,163 101,152 82,139"/>
-        <polygon fill="#D5BFB2" points="111,152 133,163 128,139"/>
-        <polygon fill="#233447" points="133,163 111,152 113,169 111,172"/>
-        <polygon fill="#233447" points="79,163 89,172 87,169 101,152"/>
-        <polygon fill="#F6851B" points="107,105 82,139 101,152 109,126"/>
-        <polygon fill="#F6851B" points="145,100 107,105 109,126 127,152 146,139"/>
-        <polygon fill="#161616" points="89,172 111,172 107,189"/>
-        <polygon fill="#763D16" points="174,0 118,22 127,57 148,61 157,44"/>
-        <polygon fill="#763D16" points="38,0 55,44 64,61 86,57 94,22"/>
-        <polygon fill="#F6851B" points="86,57 66,100 103,102"/>
-        <polygon fill="#F6851B" points="148,61 109,102 145,100"/>
-        <polygon fill="#763D16" points="38,0 55,44 38,78 31,137 61,136 77,83 66,100 86,57 94,22"/>
-        <polygon fill="#763D16" points="174,0 157,44 148,61 145,100 135,83 109,62 127,57 118,22"/>
+      <svg width="40" height="40" viewBox="0 0 318.6 318.6" xmlns="http://www.w3.org/2000/svg">
+        <polygon fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round" points="274.1,35.5 174.6,109.4 193,65.8"/>
+        <polygon fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round" points="44.4,35.5 143.1,110.1 125.6,65.8"/>
+        <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="238.3,206.8 211.8,247.4 268.5,263 284.8,207.7"/>
+        <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="33.9,207.7 50.1,263 106.8,247.4 80.3,206.8"/>
+        <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="103.6,138.2 87.8,162.1 144.1,164.6 142.1,104.1"/>
+        <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="214.9,138.2 176.3,103.4 175.1,164.6 231.3,162.1"/>
+        <polygon fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round" points="106.8,247.4 140.6,230.2 111.4,208.1"/>
+        <polygon fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round" points="177.9,230.2 211.8,247.4 207.1,208.1"/>
+        <polygon fill="#CD6116" stroke="#CD6116" strokeLinecap="round" strokeLinejoin="round" points="211.8,247.4 177.9,230.2 180.6,253 180.3,262.3"/>
+        <polygon fill="#CD6116" stroke="#CD6116" strokeLinecap="round" strokeLinejoin="round" points="106.8,247.4 138.3,262.3 138.1,253 140.6,230.2"/>
+        <polygon fill="#E4751F" stroke="#E4751F" strokeLinecap="round" strokeLinejoin="round" points="138.8,193.5 110.6,185.2 130.5,176.1"/>
+        <polygon fill="#E4751F" stroke="#E4751F" strokeLinecap="round" strokeLinejoin="round" points="179.7,193.5 187.9,176.1 208,185.2"/>
+        <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="106.8,247.4 111.6,206.8 80.3,207.7"/>
+        <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="207,206.8 211.8,247.4 238.3,207.7"/>
+        <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="231.3,162.1 175.1,164.6 179.8,193.5 188,176.1 208.1,185.2"/>
+        <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="110.6,185.2 130.7,176.1 138.8,193.5 144.1,164.6 87.8,162.1"/>
+        <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="87.8,162.1 111.4,208.1 110.6,185.2"/>
+        <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="208.1,185.2 207.1,208.1 231.3,162.1"/>
+        <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="144.1,164.6 138.8,193.5 145.4,227.6 146.9,182.7"/>
+        <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="175.1,164.6 171.9,182.6 172.9,227.6 179.8,193.5"/>
+        <polygon fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round" points="179.8,193.5 172.9,227.6 177.9,230.2 207.1,208.1 208.1,185.2"/>
+        <polygon fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round" points="110.6,185.2 111.4,208.1 140.6,230.2 145.4,227.6 138.8,193.5"/>
+        <polygon fill="#763D16" stroke="#763D16" strokeLinecap="round" strokeLinejoin="round" points="180.3,262.3 180.6,253 178.1,250.8 140.4,250.8 138.1,253 138.3,262.3 106.8,247.4 117.8,256.4 140.1,271.9 178.4,271.9 200.9,256.4 211.8,247.4"/>
+        <polygon fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round" points="177.9,230.2 172.9,227.6 145.4,227.6 140.6,230.2 138.1,253 140.4,250.8 178.1,250.8 180.6,253"/>
+        <polygon fill="#763D16" stroke="#763D16" strokeLinecap="round" strokeLinejoin="round" points="278.3,114.2 286.8,73.4 274.1,35.5 177.9,106.9 214.9,138.2 267.2,153.5 278.8,140 273.8,136.4 281.8,129.1 275.6,124.3 283.6,118.2"/>
+        <polygon fill="#763D16" stroke="#763D16" strokeLinecap="round" strokeLinejoin="round" points="31.8,73.4 40.3,114.2 34.9,118.2 42.9,124.3 36.8,129.1 44.8,136.4 39.8,140 51.3,153.5 103.6,138.2 140.6,106.9 44.4,35.5"/>
+        <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="267.2,153.5 214.9,138.2 231.3,162.1 207.1,208.1 238.3,207.7 284.8,207.7"/>
+        <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="103.6,138.2 51.3,153.5 33.9,207.7 80.3,207.7 111.4,208.1 87.8,162.1"/>
+        <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="175.1,164.6 177.9,106.9 193.2,65.8 125.6,65.8 140.6,106.9 144.1,164.6 145.3,182.8 145.4,227.6 172.9,227.6 173.1,182.8"/>
       </svg>
     ),
   },
@@ -41,12 +51,38 @@ const WALLET_REGISTRY = [
     detectKey: 'isRabby',
     installUrl: 'https://rabby.io/',
     icon: (
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="36" height="36" rx="10" fill="#8697FF"/>
-        <path d="M8 13C8 10.791 9.791 9 12 9H22C26.418 9 30 12.582 30 17C30 21.418 26.418 25 22 25H8V13Z" fill="white" fillOpacity="0.22"/>
-        <circle cx="24" cy="15" r="3" fill="white"/>
-        <circle cx="24" cy="15" r="1.5" fill="#8697FF"/>
-        <rect x="8" y="9" width="3" height="16" rx="1.5" fill="white" fillOpacity="0.45"/>
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="rabby-bg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#7084FF"/>
+            <stop offset="100%" stopColor="#5162E8"/>
+          </linearGradient>
+        </defs>
+        {/* Background */}
+        <rect width="40" height="40" rx="11" fill="url(#rabby-bg)"/>
+        {/* Left ear */}
+        <path d="M11 18 C11 10 14 6 16.5 6 C18 6 19 7.5 19 10 L19 18 Z" fill="white" fillOpacity="0.95"/>
+        {/* Left ear inner */}
+        <path d="M12.5 17.5 C12.5 12 14.5 8.5 16.5 8.5 C17.3 8.5 17.8 9.5 17.8 11.5 L17.8 17.5 Z" fill="#FFB8C6" fillOpacity="0.7"/>
+        {/* Right ear */}
+        <path d="M29 18 C29 10 26 6 23.5 6 C22 6 21 7.5 21 10 L21 18 Z" fill="white" fillOpacity="0.95"/>
+        {/* Right ear inner */}
+        <path d="M27.5 17.5 C27.5 12 25.5 8.5 23.5 8.5 C22.7 8.5 22.2 9.5 22.2 11.5 L22.2 17.5 Z" fill="#FFB8C6" fillOpacity="0.7"/>
+        {/* Head */}
+        <ellipse cx="20" cy="24" rx="10" ry="9" fill="white" fillOpacity="0.96"/>
+        {/* Left eye */}
+        <circle cx="16.5" cy="22" r="2" fill="#5162E8"/>
+        <circle cx="17.2" cy="21.3" r="0.7" fill="white"/>
+        {/* Right eye */}
+        <circle cx="23.5" cy="22" r="2" fill="#5162E8"/>
+        <circle cx="24.2" cy="21.3" r="0.7" fill="white"/>
+        {/* Nose */}
+        <ellipse cx="20" cy="26" rx="1.2" ry="0.9" fill="#FFB8C6"/>
+        {/* Mouth */}
+        <path d="M18.2 27.2 Q20 28.8 21.8 27.2" stroke="#C0A0A8" strokeWidth="0.8" fill="none" strokeLinecap="round"/>
+        {/* Cheeks */}
+        <ellipse cx="14" cy="25.5" rx="2.2" ry="1.3" fill="#FFB8C6" fillOpacity="0.4"/>
+        <ellipse cx="26" cy="25.5" rx="2.2" ry="1.3" fill="#FFB8C6" fillOpacity="0.4"/>
       </svg>
     ),
   },
