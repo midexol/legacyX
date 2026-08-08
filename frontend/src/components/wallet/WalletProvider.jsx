@@ -29,14 +29,25 @@ function detectInjectedWallet() {
 /* ─── Get a specific provider from window.ethereum.providers list ─────── */
 function getProvider(preferType) {
   const eth = window.ethereum;
+
+  // Rabby exposes a dedicated window.rabby — use it when available
+  if (preferType === 'rabby' && window.rabby) return window.rabby;
+
   if (!eth) return null;
 
   // Multi-wallet scenario: MetaMask injects an array of providers
   if (Array.isArray(eth.providers)) {
-    if (preferType === 'metamask')   return eth.providers.find(p => p.isMetaMask && !p.isRabby) || eth;
-    if (preferType === 'rabby')      return eth.providers.find(p => p.isRabby) || eth;
+    if (preferType === 'metamask')    return eth.providers.find(p => p.isMetaMask && !p.isRabby) || eth;
+    if (preferType === 'rabby')       return eth.providers.find(p => p.isRabby) || eth;
     if (preferType === 'coinbase-ext') return eth.providers.find(p => p.isCoinbaseWallet) || eth;
+    if (preferType === 'brave')       return eth.providers.find(p => p.isBraveWallet) || eth;
   }
+
+  // Single wallet — just use eth but verify it matches
+  if (preferType === 'rabby'       && !eth.isRabby)        return null;
+  if (preferType === 'coinbase-ext' && !eth.isCoinbaseWallet) return null;
+  if (preferType === 'brave'       && !eth.isBraveWallet)  return null;
+
   return eth;
 }
 

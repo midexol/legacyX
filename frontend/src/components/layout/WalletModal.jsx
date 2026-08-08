@@ -132,23 +132,38 @@ export default function WalletModal({ open, onClose, onConnectWallet }) {
 
   if (!open) return null;
 
-  /* ─── Decide which wallets to show and their state ─────────────────── */
-  const eth = window.ethereum;
-  const hasAnyInjected = !!eth;
+  /* ─── Robust wallet detection ───────────────────────────────────────── */
+  // Normalise all injected providers into one flat list so we always check
+  // both the top-level window.ethereum AND any window.ethereum.providers[].
+  function isInstalled(walletId) {
+    if (walletId === 'demo' || walletId === 'walletconnect') return true;
 
-  const wallets = WALLET_REGISTRY.map(w => {
-    let installed = false;
-    if (w.id === 'demo' || w.id === 'walletconnect') {
-      installed = true; // always available
-    } else if (hasAnyInjected) {
-      if (Array.isArray(eth.providers)) {
-        installed = eth.providers.some(p => w.detectKey && p[w.detectKey]);
-      } else {
-        installed = !!(w.detectKey && eth[w.detectKey]);
-      }
+    const eth = window.ethereum;
+
+    // Rabby also exposes window.rabby — check that first as a reliable signal
+    if (walletId === 'rabby' && window.rabby) return true;
+
+    if (!eth) return false;
+
+    // Build a flat list: always include eth itself, plus any .providers[]
+    const all = [eth, ...(Array.isArray(eth.providers) ? eth.providers : [])];
+
+    switch (walletId) {
+      case 'metamask':
+        // Rabby sets isMetaMask:true too — exclude it to avoid false positive
+        return all.some(p => p.isMetaMask && !p.isRabby);
+      case 'rabby':
+        return all.some(p => p.isRabby);
+      case 'coinbase-ext':
+        return all.some(p => p.isCoinbaseWallet);
+      case 'brave':
+        return all.some(p => p.isBraveWallet);
+      default:
+        return false;
     }
-    return { ...w, installed };
-  });
+  }
+
+  const wallets = WALLET_REGISTRY.map(w => ({ ...w, installed: isInstalled(w.id) }));
 
   const handleConnect = async (walletId, installed, installUrl) => {
     if (!installed && installUrl) {
