@@ -6,7 +6,7 @@ LegacyX ensures your digital assets (`FXRP`, `FLR`, and cross-chain tokens) are 
 
 ---
 
-## 🌟 Executive Summary
+## Executive Summary
 
 Over **$30 Billion** in cryptocurrency is permanently trapped in inaccessible wallets due to missing private keys, sudden incapacitation, or deceased owners with no digital estate plan. Traditional legal wills cannot execute on-chain transfers, while central exchanges require custodial surrender of funds.
 
@@ -19,7 +19,7 @@ Over **$30 Billion** in cryptocurrency is permanently trapped in inaccessible wa
 
 ---
 
-## 🔥 How LegacyX Uses the Flare Stack
+## How LegacyX Uses the Flare Stack
 
 LegacyX is designed from the ground up to leverage Flare's native interoperability, data verification, and oracle infrastructure.
 
@@ -72,7 +72,7 @@ LegacyX is designed from the ground up to leverage Flare's native interoperabili
 
 ---
 
-## 🔄 End-to-End Data Flow (App to Flare Stack)
+## End-to-End Data Flow (App to Flare Stack)
 
 ```mermaid
 sequenceDiagram
@@ -124,7 +124,7 @@ sequenceDiagram
 
 ---
 
-## 📊 Technical Data Flow Breakdown
+## Technical Data Flow Breakdown
 
 | Data Flow Stage | Initiator | Flare Stack Component | Description |
 |---|---|---|---|
@@ -138,7 +138,7 @@ sequenceDiagram
 
 ---
 
-## 📜 Smart Contracts & Live Testnet Deployments
+## Smart Contracts & Live Testnet Deployments
 
 All contracts are compiled with Solidity `0.8.24` and deployed on **Flare Coston2 Testnet** (Chain ID 114) and Base Sepolia.
 
@@ -152,7 +152,7 @@ All contracts are compiled with Solidity `0.8.24` and deployed on **Flare Coston
 | **`LegacyVault` (Demo ERC20)** | Base Sepolia | [`0xda915D3222Aa0D3fd392Bf746f8ed6FC02ADD6e6`](https://sepolia.basescan.org/address/0xda915D3222Aa0D3fd392Bf746f8ed6FC02ADD6e6) | Cross-chain destination vault test. |
 
 ### Verified On-Chain Transactions (Flare Coston2):
-1. **Deposit 5 FXRP into Vault:** [`0x1f6b3c44853ec2e08a473e1484f594485be26103abcee1d031cea997b7f35991`](https://coston2.testnet.flarescan.com/tx/0x1f6b3c44853ec2e08a473e1484f594485be26103abcee1d031cea997b7f35991)
+1. **Deposit 5 FXRP into Vault:** [`0x1f6b3c44853ec2e08a473e1484f594485be26103abcee1d031cea997b7f35991`](https://coston2.testnet.flarescan.com/address/0x1f6b3c44853ec2e08a473e1484f594485be26103abcee1d031cea997b7f35991)
 2. **Cross-Chain Heartbeat Relay:** [`0x58541c969d5118c8d5fdab49da0031848ca133add233daadb375b8500f8f3194`](https://coston2.testnet.flarescan.com/tx/0x58541c969d5118c8d5fdab49da0031848ca133add233daadb375b8500f8f3194) · [LayerZero Scan](https://testnet.layerzeroscan.com/tx/0x58541c969d5118c8d5fdab49da0031848ca133add233daadb375b8500f8f3194)
 3. **Beneficiary & Condition Addition:** [`0xe01ea9b4438fd537649dea6f696302fab80d7e21d294e07080fed181447706b4`](https://coston2.testnet.flarescan.com/tx/0xe01ea9b4438fd537649dea6f696302fab80d7e21d294e07080fed181447706b4)
 4. **On-Chain Vault Unlock:** [`0x8322df761762faf5b5315581492a5678c553066dc62241534a28deee446974b1`](https://coston2.testnet.flarescan.com/tx/0x8322df761762faf5b5315581492a5678c553066dc62241534a28deee446974b1)
@@ -160,7 +160,7 @@ All contracts are compiled with Solidity `0.8.24` and deployed on **Flare Coston
 
 ---
 
-## 🛠️ Repository Structure
+## Repository Structure
 
 ```
 legacyX/
@@ -182,7 +182,7 @@ legacyX/
 
 ---
 
-## 🚀 Quick Start & Local Setup
+## Quick Start & Local Setup
 
 ### Prerequisites
 - **Node.js**: `v18+` or `v20+`
@@ -228,12 +228,12 @@ npm run dev:all
 
 ---
 
-## 🛡️ Security & Disclaimer
+## Security & Disclaimer
 
 This software is a hackathon prototype developed for demonstration on the **Flare Coston2 Testnet**. Smart contracts have not undergone a formal security audit. Do not deploy to mainnet with real funds without conducting a comprehensive third-party audit.
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the **MIT License**. See `LICENSE` for more information.
