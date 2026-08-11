@@ -4,10 +4,26 @@ import WalletModal from '../layout/WalletModal';
 import Icn from '../ui/Icon';
 
 export default function RequireWallet({ children }) {
-  const { isConnected, connect, loading } = useWallet();
+  const {
+    isConnected, loading,
+    connectMetaMask, connectRabby, connectBrave, connectCoinbaseExt, connectWalletConnect, connectDemo,
+  } = useWallet();
   const [modalOpen, setModalOpen] = useState(false);
 
   if (isConnected) return children;
+
+  const handleConnectWallet = async (id) => {
+    const map = {
+      metamask:       connectMetaMask,
+      rabby:          connectRabby,
+      brave:          connectBrave,
+      'coinbase-ext': connectCoinbaseExt,
+      walletconnect:  connectWalletConnect,
+      demo:           connectDemo,
+    };
+    const fn = map[id];
+    if (fn) await fn();
+  };
 
   return (
     <div className="page-content" style={{
@@ -22,26 +38,26 @@ export default function RequireWallet({ children }) {
         }}>
           <Icn name="lock" size={26} />
         </div>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px,3vw,32px)', fontWeight: 600, marginBottom: 12 }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px,3vw,32px)', fontWeight: 600, marginBottom: 28 }}>
           Connect your wallet to continue
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-          This page is tied to your on-chain identity — connect MetaMask on Flare Coston2 to view or manage your vault.
-        </p>
         <button
           className="btn btn-gold btn-lg"
           onClick={() => setModalOpen(true)}
           disabled={loading}
           id="gate-connect-btn"
         >
-          {loading ? 'Connecting…' : 'Connect Wallet'}
+          {loading ? 'Connecting...' : 'Connect Wallet'}
         </button>
       </div>
 
       <WalletModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onConnect={async () => { setModalOpen(false); await connect(); }}
+        onConnectWallet={async (id) => {
+          await handleConnectWallet(id);
+          setModalOpen(false);
+        }}
       />
     </div>
   );

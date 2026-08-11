@@ -3,4 +3,12 @@ node_modules/
 .next/
 **/.next/
 .env*
+!.env.example
+!**/.env.example
 .DS_Store
+
+# Foundry (contracts/)
+contracts/lib/
+contracts/out/
+contracts/cache/
+contracts/broadcast/

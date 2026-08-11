@@ -39,15 +39,52 @@ export default function CreateVault() {
   const [txHash, setTxHash]         = useState('');
 
   const totalPct = benes.reduce((s,b) => s + (parseFloat(b.pct)||0), 0);
+  const is100Pct = Math.abs(totalPct - 100) < 0.1 || Math.round(totalPct) === 100;
 
   const validate = () => {
     if (step === 1 && (!amount || parseFloat(amount) <= 0)) {
       toast('Invalid Amount', 'Enter a valid deposit amount.', 'error'); return false;
     }
     if (step === 2) {
-      const ok = benes.every(b => b.name && b.addr.startsWith('0x') && parseFloat(b.pct) > 0);
-      if (!ok || Math.round(totalPct) !== 100) {
-        toast('Invalid Allocation', `Total must equal 100%. Currently ${totalPct.toFixed(0)}%.`, 'error'); return false;
+      if (!is100Pct) {
+        toast('Invalid Allocation', `Total allocation must equal 100%. Currently ${totalPct.toFixed(0)}%.`, 'error');
+        return false;
+      }
+      for (let i = 0; i < benes.length; i++) {
+        const b = benes[i];
+        const num = i + 1;
+        if (!b.name || !b.name.trim()) {
+          toast('Missing Name', `Beneficiary #${num} requires a name.`, 'error');
+          return false;
+        }
+        const pctVal = parseFloat(b.pct) || 0;
+        if (pctVal <= 0) {
+          toast('Invalid Percentage', `Beneficiary #${num} (${b.name}) percentage must be greater than 0%.`, 'error');
+          return false;
+        }
+        const addr = (b.addr || '').trim();
+        const email = (b.email || '').trim();
+        if (!addr && !email) {
+          toast('Missing Contact Info', `Beneficiary #${num} (${b.name}) requires a wallet address (0x...) or email.`, 'error');
+          return false;
+        }
+        if (addr && !addr.toLowerCase().startsWith('0x')) {
+          toast('Invalid Address', `Beneficiary #${num} (${b.name}) wallet address must start with 0x...`, 'error');
+          return false;
+        }
+      }
+    }
+    if (step === 3) {
+      if (cond === 'date' && !unlockDate) {
+        toast('Missing Date', 'Please select a future time-lock date.', 'error');
+        return false;
+      }
+      if (cond === 'guardian') {
+        const validGuardians = guardians.filter(g => g && g.trim().toLowerCase().startsWith('0x'));
+        if (validGuardians.length < 2) {
+          toast('Guardian Addresses Needed', 'Provide at least 2 valid guardian wallet addresses (0x...).', 'error');
+          return false;
+        }
       }
     }
     return true;
@@ -63,14 +100,19 @@ export default function CreateVault() {
   const deploy = async () => {
     if (!isConnected) { connect(); return; }
     setDeploying(true);
-    toast('Deploying...', 'Confirm the transaction in MetaMask.', 'info');
+    toast('Deploying...', 'Confirm the transaction in your wallet.', 'info');
     try {
-      const tx = await window.ethereum.request({
-        method:'eth_sendTransaction',
-        params:[{ from:account, to:account, value:'0x0' }]
-      });
-      await new Promise(r => setTimeout(r,2000));
-      const hash = tx || '0x'+Math.random().toString(16).slice(2,42);
+      let hash = '';
+      if (window.ethereum && sessionStorage.getItem('lx_demo_wallet') !== 'true') {
+        hash = await window.ethereum.request({
+          method:'eth_sendTransaction',
+          params:[{ from:account, to:account, value:'0x0' }]
+        });
+      }
+      await new Promise(r => setTimeout(r, 1800));
+      if (!hash) {
+        hash = '0x' + Array.from({length:40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+      }
       setTxHash(hash);
 
       const condMeta = CONDITIONS.find(c => c.id === cond);
@@ -94,7 +136,7 @@ export default function CreateVault() {
       setDeployed(true);
       toast('Vault Deployed!', 'Your Legacy Vault is live on Flare Coston2!', 'success');
     } catch(e) {
-      toast('Deploy Failed', e.code===4001?'Transaction rejected.':e.message, 'error');
+      toast('Deploy Failed', e.code===4001?'Transaction rejected.':(e.message || 'Deployment error'), 'error');
     } finally { setDeploying(false); }
   };
 
@@ -215,10 +257,10 @@ export default function CreateVault() {
                 ))}
                 <button onClick={addBene} style={{ width:'100%',padding:'10px',background:'none',border:'1px dashed var(--border-card)',borderRadius:'var(--radius-md)',color:'var(--blue)',fontSize:13,fontWeight:600,cursor:'pointer',marginBottom:16,transition:'all 0.15s ease' }}>+ Add Beneficiary</button>
                 <div style={{ height:4,background:'var(--border-card)',borderRadius:2,overflow:'hidden',marginBottom:8 }}>
-                  <div style={{ height:'100%',background:Math.round(totalPct)===100?'var(--green)':'var(--blue)',borderRadius:2,width:`${Math.min(totalPct,100)}%`,transition:'width 0.4s ease' }} />
+                  <div style={{ height:'100%',background:is100Pct?'var(--green)':'var(--blue)',borderRadius:2,width:`${Math.min(totalPct,100)}%`,transition:'width 0.4s ease' }} />
                 </div>
-                <p style={{ fontSize:13,color:Math.round(totalPct)===100?'var(--green)':'var(--text-muted)', marginBottom:16 }}>
-                  {totalPct.toFixed(0)}% allocated {Math.round(totalPct)===100?'✓':`— need ${(100-totalPct).toFixed(0)}% more`}
+                <p style={{ fontSize:13,color:is100Pct?'var(--green)':'var(--text-muted)', marginBottom:16 }}>
+                  {totalPct.toFixed(0)}% allocated {is100Pct?'✓':`— need ${(100-totalPct).toFixed(0)}% more`}
                 </p>
                 <div style={{ display:'flex', gap:12, alignItems:'flex-start', padding:14, background:'var(--bg-card)', border:'1px solid var(--border-card)', borderRadius:'var(--radius-md)' }}>
                   <div style={{ color:'var(--gold)', flexShrink:0, marginTop:1 }}><Icn name="bell" size={18} /></div>

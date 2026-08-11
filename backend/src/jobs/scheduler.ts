@@ -1,29 +1,53 @@
 import cron, { type ScheduledTask } from "node-cron";
 import { env } from "../config/env";
 import { logger } from "../utils/logger";
+import { runVerificationSweep } from "../services/verification.service";
 import { runMatchingSweep } from "../services/matching.service";
-import { tickPrice } from "../services/stats.service";
+import { runMarketplaceMatchingSweep } from "../services/marketplaceMatching.service";
+import { tickMarketplacePrice } from "../services/marketplaceStats.service";
 
 let tasks: ScheduledTask[] = [];
 
-// Simulated OTC matching engine + market price ticker described in the
-// contract ("matching logic isn't specified — that's your system's job").
-// Both are idempotent sweeps over persisted state, safe to run on an
-// interval.
+// Background "verification layer" + OTC matching engine described in the
+// brief, plus the Public Marketplace's matching/settlement simulation and
+// price tick (frontend/API_CONTRACT.md). All idempotent sweeps over
+// already-persisted state, so running them on an interval (in addition to
+// the on-demand endpoints, where applicable) is safe and just a matter of
+// latency.
 export function startScheduler() {
-  const expr = `*/${env.MATCHING_INTERVAL_SECONDS} * * * * *`;
+  const verificationExpr = `*/${env.VERIFICATION_INTERVAL_SECONDS} * * * * *`;
+  const matchingExpr = `*/${env.MATCHING_INTERVAL_SECONDS} * * * * *`;
 
-  const task = cron.schedule(expr, async () => {
+  const verificationTask = cron.schedule(verificationExpr, async () => {
     try {
-      await runMatchingSweep();
-      await tickPrice();
+      await runVerificationSweep();
     } catch (err) {
-      logger.error({ err }, "Background sweep failed");
+      logger.error({ err }, "Verification sweep failed");
     }
   });
 
-  tasks = [task];
-  logger.info({ expr }, "OTC matching + price-tick scheduler started");
+  const matchingTask = cron.schedule(matchingExpr, async () => {
+    try {
+      await runMatchingSweep();
+    } catch (err) {
+      logger.error({ err }, "OTC matching sweep failed");
+    }
+  });
+
+  const marketplaceTask = cron.schedule(matchingExpr, async () => {
+    try {
+      await runMarketplaceMatchingSweep();
+      await tickMarketplacePrice();
+    } catch (err) {
+      logger.error({ err }, "Marketplace sweep failed");
+    }
+  });
+
+  tasks = [verificationTask, matchingTask, marketplaceTask];
+  logger.info(
+    { verificationExpr, matchingExpr },
+    "Background verification + OTC matching + marketplace scheduler started"
+  );
 }
 
 export function stopScheduler() {

@@ -1,22 +1,45 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/ui/Toast';
+import { useVaultData } from '../components/wallet/VaultDataProvider';
 import Icn from '../components/ui/Icon';
 
-const BENES = [
+const SAMPLE_BENES = [
   { name:'Mother',   initial:'M', amount:'125 FXRP', pct:'50%', color:'var(--blue)'   },
   { name:'Brother',  initial:'B', amount:'75 FXRP',  pct:'30%', color:'var(--purple)' },
   { name:'Daughter', initial:'D', amount:'50 FXRP',  pct:'20%', color:'var(--green)'  },
 ];
 
+const BENES_COLORS = ['var(--blue)', 'var(--purple)', 'var(--green)', 'var(--gold)'];
+
 export default function Unlock() {
   const toast = useToast();
+  const { vault, addActivity } = useVaultData();
   const goldRef = useRef(null);
   const [stage, setStage]         = useState('idle');
   const [doorsOpen, setDoorsOpen] = useState(false);
   const [vaultLit, setVaultLit]   = useState(false);
   const [litCards, setLitCards]   = useState([]);
   const [checkDone, setCheckDone] = useState(false);
+
+  const activeBenes = vault && vault.beneficiaries && vault.beneficiaries.length > 0
+    ? vault.beneficiaries.map((b, i) => {
+        const totalNum = parseFloat(vault.amount || 0);
+        const pctNum = parseFloat(b.pct || 0);
+        const calcAmt = totalNum > 0 ? (totalNum * (pctNum / 100)).toFixed(1) : '0';
+        return {
+          name: b.name || `Beneficiary ${i+1}`,
+          initial: (b.name || 'B')[0].toUpperCase(),
+          amount: `${calcAmt} ${vault.asset || 'FXRP'}`,
+          pct: `${b.pct}%`,
+          color: BENES_COLORS[i % BENES_COLORS.length],
+        };
+      })
+    : SAMPLE_BENES;
+
+  const totalAssetAmount = vault ? `${vault.amount || '0'} ${vault.asset || 'FXRP'}` : '250 FXRP';
+  const vaultName = vault ? 'Your Legacy Vault' : "John's Legacy Vault";
+  const conditionMessage = vault?.conditionLabel || 'Inactivity threshold exceeded: 365 days with no wallet activity.';
 
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
@@ -52,13 +75,16 @@ export default function Unlock() {
     await delay(1200); setVaultLit(true);
     await delay(800); goldBurst();
     await delay(1000); setStage('distribution');
-    for (let i=0;i<BENES.length;i++) {
+    for (let i=0;i<activeBenes.length;i++) {
       await delay(700);
       setLitCards(c => [...c, i]);
-      toast(`${BENES[i].name} notified`, `${BENES[i].amount} sent to ${BENES[i].name}`, 'success');
+      toast(`${activeBenes[i].name} notified`, `${activeBenes[i].amount} sent to ${activeBenes[i].name}`, 'success');
     }
     await delay(1200); setStage('success');
     await delay(400); setCheckDone(true);
+    if (vault && addActivity) {
+      addActivity({ icon:'unlock', text:`Vault unlocked and ${totalAssetAmount} distributed` });
+    }
   };
 
   return (
@@ -68,16 +94,22 @@ export default function Unlock() {
       {stage === 'idle' && (
         <div style={{ maxWidth:480,width:'100%',background:'var(--bg-card)',border:'1px solid var(--border-card)',borderRadius:'var(--radius-xl)',padding:48,textAlign:'center' }}>
           <div style={{ display:'flex',justifyContent:'center',color:'var(--gold)',marginBottom:24,animation:'float 3s ease-in-out infinite' }}><Icn name="lock" size={52} /></div>
-          <h1 style={{ fontSize:'clamp(28px,4vw,40px)',fontWeight:800,marginBottom:12 }}>Vault Unlock <span style={{ background:'var(--grad-blue-purple)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>Demo</span></h1>
-          <p style={{ color:'var(--text-secondary)',fontSize:14,lineHeight:1.7,marginBottom:24 }}>Inheritance conditions have been met for John's Legacy Vault. 250 FXRP is ready to be distributed to 3 beneficiaries.</p>
+          <h1 style={{ fontSize:'clamp(28px,4vw,40px)',fontWeight:800,marginBottom:12 }}>Vault Unlock <span style={{ background:'var(--grad-blue-purple)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>Execution</span></h1>
+          <p style={{ color:'var(--text-secondary)',fontSize:14,lineHeight:1.7,marginBottom:24 }}>
+            Inheritance conditions have been met for {vaultName}. {totalAssetAmount} is ready to be distributed to {activeBenes.length} beneficiar{activeBenes.length === 1 ? 'y' : 'ies'}.
+          </p>
           <div style={{ background:'rgba(255,209,102,0.08)',border:'1px solid rgba(255,209,102,0.2)',borderRadius:'var(--radius-md)',padding:'14px 20px',textAlign:'left',marginBottom:24 }}>
             <div style={{ fontSize:11,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--gold)',marginBottom:6 }}>Condition Met</div>
-            <div style={{ fontSize:13,color:'var(--text-secondary)' }}>Inactivity threshold exceeded: 365 days with no wallet activity.</div>
+            <div style={{ fontSize:13,color:'var(--text-secondary)' }}>{conditionMessage}</div>
           </div>
           <div style={{ display:'flex',justifyContent:'space-around',padding:'16px 0',borderTop:'1px solid var(--border-subtle)',borderBottom:'1px solid var(--border-subtle)',marginBottom:28 }}>
-            {[{val:'250',label:'FXRP Total'},{val:'3',label:'Beneficiaries'},{val:'$130',label:'USD Value'}].map(s=>(
+            {[
+              {val: vault ? vault.amount : '250', label: `${vault?.asset || 'FXRP'} Total`},
+              {val: String(activeBenes.length), label: 'Beneficiaries'},
+              {val: 'Coston2', label: 'Network'}
+            ].map(s=>(
               <div key={s.label} style={{ textAlign:'center' }}>
-                <div style={{ fontSize:28,fontWeight:800,marginBottom:2 }}>{s.val}</div>
+                <div style={{ fontSize:24,fontWeight:800,marginBottom:2 }}>{s.val}</div>
                 <div style={{ fontSize:11,color:'var(--text-muted)' }}>{s.label}</div>
               </div>
             ))}
@@ -110,8 +142,8 @@ export default function Unlock() {
         <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:24,textAlign:'center' }}>
           <h2 style={{ fontSize:24,fontWeight:700,color:'var(--text-secondary)' }}>Distributing Assets to Beneficiaries</h2>
           <div style={{ display:'flex',gap:16,flexWrap:'wrap',justifyContent:'center' }}>
-            {BENES.map((b,i) => (
-              <div key={b.name} style={{ background:'var(--bg-card)',border:`1px solid ${litCards.includes(i)?b.color:'var(--border-card)'}`,borderRadius:'var(--radius-lg)',padding:'24px 32px',textAlign:'center',opacity:litCards.includes(i)?1:0,transform:litCards.includes(i)?'scale(1) translateY(0)':'scale(0.9) translateY(12px)',transition:'all 0.6s cubic-bezier(0.34,1.56,0.64,1)',minWidth:140 }}>
+            {activeBenes.map((b,i) => (
+              <div key={b.name + i} style={{ background:'var(--bg-card)',border:`1px solid ${litCards.includes(i)?b.color:'var(--border-card)'}`,borderRadius:'var(--radius-lg)',padding:'24px 32px',textAlign:'center',opacity:litCards.includes(i)?1:0,transform:litCards.includes(i)?'scale(1) translateY(0)':'scale(0.9) translateY(12px)',transition:'all 0.6s cubic-bezier(0.34,1.56,0.64,1)',minWidth:140 }}>
                 <div style={{ width:44,height:44,borderRadius:'50%',background:b.color,color:'#050505',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-heading)',fontWeight:700,fontSize:18,margin:'0 auto 10px' }}>{b.initial}</div>
                 <div style={{ fontWeight:700,marginBottom:4 }}>{b.name}</div>
                 <div style={{ fontSize:20,fontWeight:700,color:b.color,marginBottom:2 }}>{b.amount}</div>
@@ -129,16 +161,18 @@ export default function Unlock() {
             <polyline style={{ fill:'none',stroke:'var(--green)',strokeWidth:3.5,strokeLinecap:'round',strokeLinejoin:'round',strokeDasharray:80,strokeDashoffset:checkDone?0:80,transition:'stroke-dashoffset 0.5s ease 1s' }} points="24,50 40,66 72,34" />
           </svg>
           <h1 style={{ fontSize:'clamp(32px,5vw,52px)',fontWeight:800,color:'var(--green)' }}>Inheritance Completed</h1>
-          <p style={{ color:'var(--text-secondary)',fontSize:16,lineHeight:1.7 }}>All 250 FXRP has been distributed to your beneficiaries. No lawyers. No banks. No delays.</p>
-          <div style={{ display:'flex',gap:40,flexWrap:'wrap',justifyContent:'center',padding:'20px 0',borderTop:'1px solid var(--border-subtle)',borderBottom:'1px solid var(--border-subtle)',width:'100%' }}>
+          <p style={{ color:'var(--text-secondary)',fontSize:16,lineHeight:1.7 }}>
+            All {totalAssetAmount} has been distributed to your beneficiaries. No lawyers. No banks. No delays.
+          </p>
+          <div style={{ display:'flex',gap:32,flexWrap:'wrap',justifyContent:'center',padding:'20px 0',borderTop:'1px solid var(--border-subtle)',borderBottom:'1px solid var(--border-subtle)',width:'100%' }}>
             {[
-              {val:'250',  label:'FXRP Distributed',  color:'var(--green)'  },
-              {val:'3',    label:'Beneficiaries Paid', color:'var(--blue)'   },
+              {val: totalAssetAmount,  label:'Total Distributed',  color:'var(--green)'  },
+              {val: String(activeBenes.length), label:'Beneficiaries Paid', color:'var(--blue)'   },
               {val:'$0',   label:'Legal Fees',          color:'var(--gold)'   },
               {val:'~2s',  label:'Settlement Time',     color:'var(--purple)' },
             ].map(s=>(
               <div key={s.label} style={{ textAlign:'center' }}>
-                <div style={{ fontSize:32,fontWeight:800,color:s.color,marginBottom:4 }}>{s.val}</div>
+                <div style={{ fontSize:28,fontWeight:800,color:s.color,marginBottom:4 }}>{s.val}</div>
                 <div style={{ fontSize:11,color:'var(--text-muted)' }}>{s.label}</div>
               </div>
             ))}
@@ -152,3 +186,4 @@ export default function Unlock() {
     </div>
   );
 }
+

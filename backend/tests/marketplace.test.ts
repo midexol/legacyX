@@ -1,7 +1,11 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { app } from "./helpers";
-import { runMatchingSweep } from "../src/services/matching.service";
+import { runMarketplaceMatchingSweep } from "../src/services/marketplaceMatching.service";
+
+// Public Marketplace (frontend/API_CONTRACT.md) — GET/POST /api/orders,
+// /api/orders/mine, /api/stats, /api/settlements. Separate from the
+// /api/otc/* system covered by tests/otc.test.ts.
 
 const SELLER = "0x9F2a0000000000000000000000000000000044Cb";
 const OTHER = "0x000000000000000000000000000000000000dEaD";
@@ -107,7 +111,7 @@ describe("matching + settlement simulation", () => {
       .expect(201);
     expect(created.body.status).toBe("pending");
 
-    await runMatchingSweep(); // pending -> matched (OTC_MATCH_DELAY_MS=0 in tests)
+    await runMarketplaceMatchingSweep(); // pending -> matched (delay = 0 in tests)
 
     let mine = await request(app).get(`/api/orders/mine?address=${SELLER}`).expect(200);
     const matchedOrder = mine.body.find((o: { id: string }) => o.id === created.body.id);
@@ -115,7 +119,7 @@ describe("matching + settlement simulation", () => {
     expect(matchedOrder.buyerAddress).toEqual(expect.any(String));
     expect(Number(matchedOrder.matchedPrice)).toBeGreaterThanOrEqual(0.5);
 
-    await runMatchingSweep(); // matched -> settled (OTC_SETTLE_DELAY_MS=0 in tests)
+    await runMarketplaceMatchingSweep(); // matched -> settled (delay = 0 in tests)
 
     mine = await request(app).get(`/api/orders/mine?address=${SELLER}`).expect(200);
     const settledOrder = mine.body.find((o: { id: string }) => o.id === created.body.id);

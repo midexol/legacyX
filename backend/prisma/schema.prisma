@@ -1,25 +1,209 @@
-// LegacyX backend data model — Private OTC Marketplace
-//
-// Scope: this is the only piece of the app that talks to a backend. Vault
-// creation, beneficiaries, inheritance conditions, and claims are handled
-// entirely client-side (wallet + localStorage) by the frontend now — see
-// frontend/src/components/wallet/VaultDataProvider.jsx. The contract this
-// schema serves is frontend/API_CONTRACT.md.
-//
-// SQLite is used for zero-config hackathon development. To move to Postgres
-// for a shared/staging environment: change `provider` to "postgresql", point
-// DATABASE_URL at a Postgres instance, and re-run `npm run prisma:migrate`.
+// LegacyX backend data model
+// Postgres (Render-managed in production — see render.yaml at the repo
+// root). Previously SQLite; migrated for Render hosting, since free-tier
+// services don't have a persistent disk for a SQLite file to survive on.
+// status/type/side fields stayed plain validated strings rather than being
+// promoted to real Prisma enums, to keep this migration a pure provider
+// swap — the application layer (zod schemas + services) already enforces
+// the valid value sets, so behavior is unaffected either way.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id @default(cuid())
+  address   String   @unique
+  nonce     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vaults Vault[]
+
+  @@map("users")
+}
+
+model Vault {
+  id     String @id @default(cuid())
+  name   String
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  currency String @default("FXRP")
+  balance  Float  @default(0)
+
+  /// One of: ACTIVE | PENDING_VERIFICATION | UNLOCKED
+  status String @default("ACTIVE")
+
+  // Inactivity-based inheritance window
+  inactivityDays  Int      @default(365)
+  lastHeartbeatAt DateTime @default(now())
+  unlockedAt      DateTime?
+  // Snapshot of `balance` taken the moment the vault unlocks, so each
+  // beneficiary's claimable share is fixed at unlock time and unaffected
+  // by other beneficiaries claiming before them.
+  unlockedBalance Float?
+
+  // Set once the owner deploys the real LegacyVault contract (contracts/src/LegacyVault.sol)
+  // for this vault and links it in via POST /:id/link-chain. Null means this
+  // vault is still purely the off-chain simulation described in mockChain.ts.
+  // When set, the backend-signable actions (inactivity sweep, trusted-verifier
+  // attestation, multi-party approval relay) act on the real contract instead
+  // of local bookkeeping.
+  chainId         Int?
+  contractAddress String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  beneficiaries Beneficiary[]
+  conditions    InheritanceCondition[]
+  transactions  VaultTransaction[]
+  claims        Claim[]
+
+  @@map("vaults")
+}
+
+model Beneficiary {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  name          String
+  address       String
+  allocationBps Int // basis points, 10000 = 100%
+
+  createdAt DateTime @default(now())
+
+  claims Claim[]
+
+  @@map("beneficiaries")
+}
+
+model InheritanceCondition {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  /// One of: INACTIVITY | MANUAL_APPROVAL | MULTI_PARTY_APPROVAL | LEGAL_DOCUMENT
+  type String
+  /// One of: PENDING | SATISFIED
+  status String @default("PENDING")
+
+  // JSON-encoded config, shape depends on `type`:
+  // INACTIVITY: {} (uses vault.inactivityDays / lastHeartbeatAt)
+  // MANUAL_APPROVAL: {}
+  // MULTI_PARTY_APPROVAL: { requiredApprovals: number, approvers: string[] }
+  // LEGAL_DOCUMENT: { documentRef: string }
+  config String @default("{}")
+
+  // Index of this condition inside the vault's on-chain `conditions` array
+  // (set by the owner when they add the matching condition via their own
+  // wallet on a chain-linked vault — see contracts/src/LegacyVault.sol). Null
+  // for purely off-chain vaults, or for on-chain vaults where this condition
+  // hasn't been linked yet.
+  onChainId Int?
+
+  satisfiedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  approvals ConditionApproval[]
+
+  @@map("inheritance_conditions")
+}
+
+model ConditionApproval {
+  id              String               @id @default(cuid())
+  conditionId     String
+  condition       InheritanceCondition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  approverAddress String
+  createdAt       DateTime             @default(now())
+
+  @@unique([conditionId, approverAddress])
+  @@map("condition_approvals")
+}
+
+model VaultTransaction {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  /// One of: DEPOSIT | WITHDRAW | CLAIM
+  type      String
+  amount    Float
+  txHash    String
+  createdAt DateTime @default(now())
+
+  @@map("vault_transactions")
+}
+
+model Claim {
+  id      String @id @default(cuid())
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  beneficiaryId String
+  beneficiary   Beneficiary @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  amount    Float
+  txHash    String
+  claimedAt DateTime @default(now())
+
+  @@map("claims")
+}
+
 model OtcOrder {
+  id     String @id @default(cuid())
+  /// One of: BUY | SELL
+  side   String
+  amount Float
+  price  Float
+  /// One of: OPEN | MATCHED | SETTLED | CANCELLED
+  status String @default("OPEN")
+
+  // Kept private — never returned in the public order book response.
+  ownerAddress String
+  vaultId      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tradeId String?
+  trade   OtcTrade? @relation(fields: [tradeId], references: [id])
+
+  @@map("otc_orders")
+}
+
+model OtcTrade {
+  id        String   @id @default(cuid())
+  amount    Float
+  price     Float
+  txHash    String
+  settledAt DateTime @default(now())
+
+  orders OtcOrder[]
+
+  @@map("otc_trades")
+}
+
+// --- Public Marketplace (frontend/API_CONTRACT.md) -------------------------
+// A second, separate OTC-shaped system from OtcOrder/OtcTrade above. Those
+// model an authenticated BUY/SELL crossing engine under /api/otc/* that
+// nothing in the current frontend calls. These model the public, unauth'd
+// contract the Vite frontend's Marketplace page actually calls today
+// (GET/POST /api/orders, GET /api/stats, GET /api/settlements) — sell-only
+// listings that get matched against a simulated counterparty rather than a
+// real order book. The two systems are intentionally left separate rather
+// than merged, since reconciling them (or retiring one) is a product call,
+// not something to guess at while just adding hosting — see backend/README.md.
+
+model MarketplaceOrder {
   // Internal sequential id, used only to derive the public "LX-XXXX" id
   // (see src/utils/publicId.ts) — never exposed directly.
   seq Int @id @default(autoincrement())
@@ -44,16 +228,16 @@ model OtcOrder {
   updatedAt DateTime  @updatedAt
   matchedAt DateTime?
 
-  settlement OtcSettlement?
+  settlement MarketplaceSettlement?
 
-  @@map("otc_orders")
+  @@map("marketplace_orders")
 }
 
-model OtcSettlement {
+model MarketplaceSettlement {
   id String @id @default(cuid())
 
-  orderSeq Int      @unique
-  order    OtcOrder @relation(fields: [orderSeq], references: [seq])
+  orderSeq Int              @unique
+  order    MarketplaceOrder @relation(fields: [orderSeq], references: [seq])
 
   asset  String
   amount String
@@ -62,16 +246,17 @@ model OtcSettlement {
 
   settledAt DateTime @default(now())
 
-  @@map("otc_settlements")
+  @@map("marketplace_settlements")
 }
 
 // Single-row table holding the simulated market price. Nudged periodically
-// by a background tick (src/services/stats.service.ts) so GET /api/stats
-// has something to show without a real Flare/FTSO price feed integration.
-model MarketStat {
+// by a background tick (src/services/marketplaceStats.service.ts) so
+// GET /api/stats has something to show without a real Flare/FTSO price feed
+// integration.
+model MarketplaceStat {
   id        Int      @id @default(1)
   priceUsd  Float
   updatedAt DateTime @updatedAt
 
-  @@map("market_stats")
+  @@map("marketplace_stats")
 }

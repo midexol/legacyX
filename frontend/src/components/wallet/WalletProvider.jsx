@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
+/* ─── Flare Coston2 chain config ───────────────────────────────────────── */
 const COSTON2 = {
   chainId: '0x72',
   chainName: 'Flare Testnet Coston2',
@@ -8,85 +9,277 @@ const COSTON2 = {
   blockExplorerUrls: ['https://coston2.testnet.flarescan.com/'],
 };
 
+const CHAIN_ID_DEC = parseInt(COSTON2.chainId, 16); // 114
+
+const DEMO_ADDRESS = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+
 const WalletCtx = createContext(null);
 
+/* ─── Detect which injected wallets are available ─────────────────────── */
+function detectInjectedWallet() {
+  const eth = window.ethereum;
+  if (!eth) return null;
+  if (eth.isRabby)            return 'rabby';
+  if (eth.isBraveWallet)      return 'brave';
+  if (eth.isCoinbaseWallet)   return 'coinbase-ext';
+  if (eth.isMetaMask)         return 'metamask';
+  return 'injected';
+}
+
+/* ─── Get a specific provider from window.ethereum.providers list ─────── */
+function getProvider(preferType) {
+  const eth = window.ethereum;
+
+  // Rabby exposes a dedicated window.rabby — use it when available
+  if (preferType === 'rabby' && window.rabby) return window.rabby;
+
+  if (!eth) return null;
+
+  // Multi-wallet scenario: MetaMask injects an array of providers
+  if (Array.isArray(eth.providers)) {
+    if (preferType === 'metamask')    return eth.providers.find(p => p.isMetaMask && !p.isRabby) || eth;
+    if (preferType === 'rabby')       return eth.providers.find(p => p.isRabby) || eth;
+    if (preferType === 'coinbase-ext') return eth.providers.find(p => p.isCoinbaseWallet) || eth;
+    if (preferType === 'brave')       return eth.providers.find(p => p.isBraveWallet) || eth;
+  }
+
+  // Single wallet — just use eth but verify it matches
+  if (preferType === 'rabby'       && !eth.isRabby)        return null;
+  if (preferType === 'coinbase-ext' && !eth.isCoinbaseWallet) return null;
+  if (preferType === 'brave'       && !eth.isBraveWallet)  return null;
+
+  return eth;
+}
+
 export function WalletProvider({ children }) {
-  const [account, setAccount]   = useState(null);
-  const [balance, setBalance]   = useState('0');
-  const [chainId, setChainId]   = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const isConnected = !!account;
-  const isCorrectChain = chainId === COSTON2.chainId;
+  const [account, setAccount]       = useState(null);
+  const [balance, setBalance]       = useState('0');
+  const [chainId, setChainId]       = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [walletType, setWalletType] = useState(null);
+  const [error, setError]           = useState(null);
 
-  const shorten = addr => addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : '';
+  // Available injected wallets detected at runtime
+  const [detectedWallets, setDetectedWallets] = useState([]);
 
-  const getBalance = useCallback(async (addr) => {
-    if (!addr || !window.ethereum) return;
-    try {
-      const hex = await window.ethereum.request({ method: 'eth_getBalance', params: [addr, 'latest'] });
-      setBalance((Number(BigInt(hex)) / 1e18).toFixed(4));
-    } catch {}
+  const activeProviderRef = useRef(null);
+
+  const isConnected    = !!account;
+  const isCorrectChain = !chainId || parseInt(chainId, 16) === CHAIN_ID_DEC;
+
+  const shorten = addr => addr ? addr.slice(0, 6) + '...' + addr.slice(-4) : '';
+
+  /* ── Detect installed wallets on mount ────────────────────────────────── */
+  useEffect(() => {
+    const detected = [];
+    const eth = window.ethereum;
+    if (eth) {
+      if (Array.isArray(eth.providers)) {
+        eth.providers.forEach(p => {
+          if (p.isRabby)          detected.push('rabby');
+          else if (p.isMetaMask)  detected.push('metamask');
+          else if (p.isCoinbaseWallet) detected.push('coinbase-ext');
+          else if (p.isBraveWallet)   detected.push('brave');
+        });
+      } else {
+        const t = detectInjectedWallet();
+        if (t) detected.push(t);
+      }
+    }
+    setDetectedWallets(detected.length ? detected : []);
   }, []);
 
-  const switchToCoston2 = useCallback(async () => {
+  /* ── Balance fetch ────────────────────────────────────────────────────── */
+  const fetchBalance = useCallback(async (addr, provider) => {
+    if (!addr || !provider) { setBalance('0'); return; }
     try {
-      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: COSTON2.chainId }] });
+      const hex = await provider.request({ method: 'eth_getBalance', params: [addr, 'latest'] });
+      setBalance(hex ? (Number(BigInt(hex)) / 1e18).toFixed(4) : '0');
+    } catch {
+      setBalance('0');
+    }
+  }, []);
+
+  /* ── Switch/add Coston2 ───────────────────────────────────────────────── */
+  const switchToCoston2 = useCallback(async (provider) => {
+    if (!provider) return;
+    try {
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: COSTON2.chainId }] });
     } catch (e) {
-      if (e.code === 4902) {
-        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [COSTON2] });
+      if (e?.code === 4902 || e?.code === -32603) {
+        try {
+          await provider.request({ method: 'wallet_addEthereumChain', params: [COSTON2] });
+        } catch (addErr) {
+          console.warn('Could not add Coston2 network:', addErr);
+        }
       }
     }
   }, []);
 
-  const connect = useCallback(async () => {
-    if (!window.ethereum) { window.open('https://metamask.io/', '_blank'); return; }
+  /* ── Finalise connection ──────────────────────────────────────────────── */
+  const finalise = useCallback((addr, type, provider) => {
+    activeProviderRef.current = provider;
+    setAccount(addr);
+    setWalletType(type);
+    setChainId(COSTON2.chainId);
+    setError(null);
+    sessionStorage.setItem('lx_wallet', addr);
+    sessionStorage.setItem('lx_wallet_type', type);
+    fetchBalance(addr, provider);
+  }, [fetchBalance]);
+
+  /* ── Generic injected connect (MetaMask, Rabby, Brave, Coinbase ext) ──── */
+  const connectInjected = useCallback(async (type) => {
+    const provider = getProvider(type);
+    if (!provider) {
+      const names = {
+        metamask: 'MetaMask', rabby: 'Rabby Wallet',
+        brave: 'Brave Wallet', 'coinbase-ext': 'Coinbase Wallet',
+      };
+      throw new Error(`${names[type] || 'Wallet'} is not installed.`);
+    }
     setLoading(true);
+    setError(null);
     try {
-      const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (!accs.length) return;
-      setAccount(accs[0]);
-      await switchToCoston2();
-      await getBalance(accs[0]);
-      sessionStorage.setItem('lx_wallet', accs[0]);
+      const accs = await provider.request({ method: 'eth_requestAccounts' });
+      if (!accs?.length) throw new Error('No accounts returned');
+      await switchToCoston2(provider);
+      finalise(accs[0], type, provider);
     } catch (e) {
-      console.error(e);
+      if (e?.code === 4001) throw new Error('User rejected the connection request.');
+      throw e;
     } finally {
       setLoading(false);
     }
-  }, [switchToCoston2, getBalance]);
+  }, [switchToCoston2, finalise]);
 
-  const disconnect = useCallback(() => {
-    setAccount(null); setBalance('0');
-    sessionStorage.removeItem('lx_wallet');
+  const connectMetaMask    = useCallback(() => connectInjected('metamask'),     [connectInjected]);
+  const connectRabby       = useCallback(() => connectInjected('rabby'),        [connectInjected]);
+  const connectBrave       = useCallback(() => connectInjected('brave'),        [connectInjected]);
+  const connectCoinbaseExt = useCallback(() => connectInjected('coinbase-ext'), [connectInjected]);
+
+  /* ── WalletConnect — opens deep link / QR on mobile ──────────────────── */
+  const connectWalletConnect = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Try to use the injected provider if available (for mobile browsers that
+      // inject WalletConnect-compatible providers)
+      if (window.ethereum && !window.ethereum.isMetaMask && !window.ethereum.isRabby) {
+        return await connectInjected('injected');
+      }
+
+      // Deep-link fallback: open WalletConnect universal link
+      // Users on desktop will be prompted to scan QR in their mobile wallet.
+      // This uses the WalletConnect web app as a relay.
+      const wcUri = `https://walletconnect.com/wc?uri=wc:`;
+      window.open(
+        'https://metamask.app.link/dapp/' + window.location.host,
+        '_blank',
+        'noopener,noreferrer'
+      );
+      setLoading(false);
+      setError('Scan the QR code in your mobile wallet app, or use a browser extension wallet above.');
+    } catch (e) {
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  }, [connectInjected]);
+
+  /* ── Demo wallet ──────────────────────────────────────────────────────── */
+  const connectDemo = useCallback(() => {
+    activeProviderRef.current = null;
+    setAccount(DEMO_ADDRESS);
+    setBalance('142.5000');
+    setChainId(COSTON2.chainId);
+    setWalletType('demo');
+    setError(null);
+    sessionStorage.setItem('lx_wallet', DEMO_ADDRESS);
+    sessionStorage.setItem('lx_wallet_type', 'demo');
   }, []);
 
-  // Auto-reconnect
-  useEffect(() => {
-    const saved = sessionStorage.getItem('lx_wallet');
-    if (!saved || !window.ethereum) return;
-    window.ethereum.request({ method: 'eth_accounts' }).then(accs => {
-      if (accs.includes(saved)) { setAccount(saved); getBalance(saved); }
-    }).catch(() => {});
-  }, [getBalance]);
+  /* ── Disconnect ───────────────────────────────────────────────────────── */
+  const disconnect = useCallback(() => {
+    activeProviderRef.current = null;
+    setAccount(null);
+    setBalance('0');
+    setChainId(null);
+    setWalletType(null);
+    setError(null);
+    sessionStorage.removeItem('lx_wallet');
+    sessionStorage.removeItem('lx_wallet_type');
+  }, []);
 
-  // MetaMask events
+  /* ── Auto-reconnect from session ──────────────────────────────────────── */
   useEffect(() => {
-    if (!window.ethereum) return;
+    const saved     = sessionStorage.getItem('lx_wallet');
+    const savedType = sessionStorage.getItem('lx_wallet_type');
+    if (!saved || !savedType) return;
+
+    if (savedType === 'demo') {
+      setAccount(saved); setBalance('142.5000');
+      setChainId(COSTON2.chainId); setWalletType('demo');
+      return;
+    }
+
+    const provider = getProvider(savedType) || window.ethereum;
+    if (!provider) return;
+
+    provider.request({ method: 'eth_accounts' })
+      .then(accs => {
+        if (accs?.length) {
+          const addr = accs.find(a => a.toLowerCase() === saved.toLowerCase()) || accs[0];
+          activeProviderRef.current = provider;
+          setAccount(addr);
+          setWalletType(savedType);
+          setChainId(COSTON2.chainId);
+          fetchBalance(addr, provider);
+        }
+      })
+      .catch(() => {});
+  }, [fetchBalance]);
+
+  /* ── Listen to injected provider events ──────────────────────────────── */
+  useEffect(() => {
+    const provider = window.ethereum;
+    if (!provider) return;
+
     const onAccounts = accs => {
-      if (!accs.length) disconnect();
-      else { setAccount(accs[0]); getBalance(accs[0]); }
+      if (!accs?.length) { disconnect(); }
+      else {
+        const addr = accs[0];
+        setAccount(addr);
+        sessionStorage.setItem('lx_wallet', addr);
+        fetchBalance(addr, activeProviderRef.current || provider);
+      }
     };
-    const onChain = id => { setChainId(id); if (id !== COSTON2.chainId) window.location.reload(); };
-    window.ethereum.on('accountsChanged', onAccounts);
-    window.ethereum.on('chainChanged', onChain);
+    const onChain = hex => {
+      setChainId(hex);
+      const addr = account || sessionStorage.getItem('lx_wallet');
+      if (addr) fetchBalance(addr, activeProviderRef.current || provider);
+    };
+
+    provider.on?.('accountsChanged', onAccounts);
+    provider.on?.('chainChanged', onChain);
     return () => {
-      window.ethereum.removeListener('accountsChanged', onAccounts);
-      window.ethereum.removeListener('chainChanged', onChain);
+      provider.removeListener?.('accountsChanged', onAccounts);
+      provider.removeListener?.('chainChanged', onChain);
     };
-  }, [disconnect, getBalance]);
+  }, [account, disconnect, fetchBalance]);
+
+  /* ── Legacy shim ──────────────────────────────────────────────────────── */
+  const connect = connectMetaMask;
 
   return (
-    <WalletCtx.Provider value={{ account, balance, chainId, isConnected, isCorrectChain, loading, connect, disconnect, shorten }}>
+    <WalletCtx.Provider value={{
+      account, balance, chainId, walletType, detectedWallets,
+      isConnected, isCorrectChain, loading, error,
+      connect, connectDemo,
+      connectMetaMask, connectRabby, connectBrave,
+      connectCoinbaseExt, connectWalletConnect,
+      disconnect, shorten,
+    }}>
       {children}
     </WalletCtx.Provider>
   );

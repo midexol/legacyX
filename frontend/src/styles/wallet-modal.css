@@ -1,0 +1,349 @@
+/* ══════════════════════════════════════════════════════════════
+   Wallet Modal — LegacyX
+   Premium multi-wallet connect sheet
+══════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ─────────────────────────────────────────────── */
+.wm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 4, 6, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: wm-overlay-in 0.22s ease;
+}
+
+@keyframes wm-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Panel ───────────────────────────────────────────────── */
+.wm-panel {
+  background: var(--bg-elevated, #13131a);
+  border: 1px solid rgba(255, 209, 102, 0.12);
+  border-radius: 24px;
+  padding: 28px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04) inset,
+    0 40px 80px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(255, 209, 102, 0.04);
+  animation: wm-panel-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes wm-panel-in {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.wm-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.wm-logo-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FFD166 0%, #D4A017 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(255, 209, 102, 0.3);
+}
+
+.wm-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary, #fff);
+  line-height: 1.2;
+}
+
+.wm-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary, rgba(255,255,255,0.5));
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.wm-close {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-muted, rgba(255,255,255,0.4));
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+.wm-close:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--text-primary, #fff);
+  transform: scale(1.05);
+}
+
+/* ── Network badge ───────────────────────────────────────── */
+.wm-network-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 209, 102, 0.08);
+  border: 1px solid rgba(255, 209, 102, 0.18);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #FFD166;
+  letter-spacing: 0.03em;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+
+.wm-network-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00D68F;
+  box-shadow: 0 0 8px #00D68F;
+  animation: wm-pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes wm-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+/* ── Error banner ────────────────────────────────────────── */
+.wm-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #ff8080;
+  margin-bottom: 14px;
+}
+.wm-error span:first-child { font-size: 16px; flex-shrink: 0; }
+.wm-error span { flex: 1; }
+.wm-error button {
+  background: none;
+  border: none;
+  color: #ff8080;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+  padding: 0;
+}
+
+/* ── Wallet list ─────────────────────────────────────────── */
+.wm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* ── Wallet item ─────────────────────────────────────────── */
+.wm-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.034);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.wm-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,209,102,0.06), transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: inherit;
+}
+
+.wm-item:hover:not(:disabled)::before { opacity: 1; }
+
+.wm-item:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255, 209, 102, 0.25);
+  transform: translateX(3px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,209,102,0.08) inset;
+}
+
+.wm-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.wm-item.connecting {
+  border-color: rgba(255, 209, 102, 0.4);
+  background: rgba(255, 209, 102, 0.06);
+  opacity: 1;
+  cursor: wait;
+}
+
+.wm-item-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wm-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wm-item-name {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text-primary, #fff);
+  letter-spacing: -0.01em;
+}
+
+.wm-item-tag {
+  font-size: 11.5px;
+  color: var(--text-muted, rgba(255,255,255,0.4));
+}
+
+.wm-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #00D68F;
+  background: rgba(0, 214, 143, 0.12);
+  border: 1px solid rgba(0, 214, 143, 0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+}
+
+.wm-item-right {
+  flex-shrink: 0;
+  color: var(--text-muted, rgba(255,255,255,0.35));
+  transition: transform 0.15s ease, color 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.wm-item:hover:not(:disabled) .wm-item-right {
+  transform: translateX(3px);
+  color: #FFD166;
+}
+
+/* ── Spinner ─────────────────────────────────────────────── */
+.wm-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,209,102,0.2);
+  border-top-color: #FFD166;
+  border-radius: 50%;
+  animation: wm-spin 0.7s linear infinite;
+}
+
+@keyframes wm-spin {
+  to { transform: rotate(360deg); }
+}
+
+.wm-item.not-installed {
+  opacity: 0.6;
+}
+.wm-item.not-installed:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  box-shadow: none;
+}
+.wm-item.not-installed:hover:not(:disabled)::before { opacity: 0; }
+
+.wm-item-install {
+  color: #5b9bd5;
+  font-size: 11px;
+}
+
+.wm-detected-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00D68F;
+  box-shadow: 0 0 6px #00D68F;
+  flex-shrink: 0;
+}
+
+.wm-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.wm-error-icon { font-size: 16px; flex-shrink: 0; }
+.wm-error-dismiss {
+  background: none;
+  border: none;
+  color: #ff8080;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.wm-footer {
+  font-size: 11.5px;
+  text-align: center;
+  color: var(--text-muted, rgba(255,255,255,0.3));
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .wm-panel {
+    padding: 20px;
+    border-radius: 20px;
+    max-width: 100%;
+  }
+  .wm-title  { font-size: 18px; }
+  .wm-item   { padding: 12px 14px; }
+  .wm-item-name { font-size: 14px; }
+  .wm-subtitle { display: none; }
+}

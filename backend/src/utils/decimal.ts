@@ -1,7 +1,9 @@
 // Decimal-safe helpers for amounts/prices transported as strings (per
-// API_CONTRACT.md: "parse them server-side with a decimal-safe method, not
-// parseFloat"). Values are scaled into BigInt fixed-point for arithmetic/
-// comparison so we never lose precision to float rounding.
+// frontend/API_CONTRACT.md: "parse them server-side with a decimal-safe
+// method, not parseFloat"). Values are scaled into BigInt fixed-point for
+// arithmetic/comparison so we never lose precision to float rounding.
+// Used by the public marketplace module (src/services/marketplace.service.ts)
+// — the existing OtcOrder/OtcTrade model elsewhere still uses Float, unrelated.
 
 const DECIMAL_STRING_RE = /^\d+(\.\d+)?$/;
 const SCALE = 18;

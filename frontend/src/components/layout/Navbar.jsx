@@ -6,13 +6,18 @@ import WalletModal from './WalletModal';
 import '../../styles/components.css';
 
 export default function Navbar() {
-  const { isConnected, account, connect, disconnect, shorten } = useWallet();
+  const {
+    isConnected, account,
+    connectMetaMask, connectRabby, connectBrave, connectCoinbaseExt, connectWalletConnect, connectDemo,
+    disconnect, shorten,
+  } = useWallet();
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
   const isLandingHero = location.pathname === '/'; // hero photo is always dark, regardless of theme
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -26,6 +31,7 @@ export default function Navbar() {
     { to: '/vault',      label: 'Vault'       },
     { to: '/marketplace',label: 'Marketplace' },
     { to: '/dashboard',  label: 'Dashboard'   },
+    { to: '/docs',       label: 'Docs'        },
   ];
 
   return (
@@ -103,7 +109,22 @@ export default function Navbar() {
         )}
       </nav>
 
-      <WalletModal open={modalOpen} onClose={() => setModalOpen(false)} onConnect={async () => { setModalOpen(false); await connect(); }} />
+      <WalletModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConnectWallet={async (id) => {
+          const map = {
+            metamask:      connectMetaMask,
+            rabby:         connectRabby,
+            brave:         connectBrave,
+            'coinbase-ext': connectCoinbaseExt,
+            walletconnect: connectWalletConnect,
+            demo:          connectDemo,
+          };
+          const fn = map[id];
+          if (fn) await fn();
+        }}
+      />
     </>
   );
 }

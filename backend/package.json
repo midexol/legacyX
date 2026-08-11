@@ -4,7 +4,11 @@
   "private": true,
   "description": "LegacyX backend — REST API for the Private OTC Marketplace (frontend/API_CONTRACT.md)",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",

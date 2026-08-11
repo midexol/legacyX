@@ -286,6 +286,7 @@ export default function Landing() {
               </p>
               <Link to="/dashboard-demo" style={{ fontSize:13, color:'var(--gold)', fontWeight:600, display:'block' }}>Preview a demo dashboard →</Link>
               <Link to="/marketplace-demo" style={{ fontSize:13, color:'var(--gold)', fontWeight:600, display:'block', marginTop:6 }}>Preview a demo marketplace →</Link>
+              <Link to="/docs" style={{ fontSize:13, color:'var(--gold)', fontWeight:600, display:'block', marginTop:6 }}>Read the docs →</Link>
             </div>
 
             <div style={{ display:'flex', gap:12 }}>
