@@ -227,6 +227,20 @@
   }
 }
 
+/* ── Docs Layout Fixes ── */
+.docs-mobile-pills { display: none !important; }
+.docs-main-content { margin-left: 260px; padding: 100px 40px 80px; max-width: 960px; width: 100%; box-sizing: border-box; }
+
+@media (max-width: 900px) {
+  .docs-mobile-pills { display: flex !important; }
+  .docs-main-content { margin-left: 0 !important; padding: 84px 20px 60px !important; }
+  .sidebar-mobile-toggle { display: flex !important; }
+}
+
+@media (min-width: 901px) {
+  .sidebar-mobile-toggle { display: none !important; }
+}
+
 /* ── Spinner ── */
 .spinner { width:20px;height:20px; border:2px solid var(--tint-3); border-top-color:var(--blue); border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block; }
 

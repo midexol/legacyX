@@ -178,7 +178,7 @@ export default function Docs() {
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle Documentation Navigation"
         style={{
-          display: 'flex', alignItems: 'center', gap: 8,
+          alignItems: 'center', gap: 8,
           position: 'fixed', top: 'calc(var(--navbar-h) + 12px)', left: '16px', zIndex: 90,
           background: 'var(--bg-elevated)', border: '1px solid var(--border-card)',
           borderRadius: 'var(--radius-full)', padding: '8px 16px', fontSize: 13,
@@ -209,7 +209,7 @@ export default function Docs() {
           position: 'sticky', top: 'var(--navbar-h)', zIndex: 40,
           background: 'var(--bg-glass)', backdropFilter: 'blur(16px)',
           borderBottom: '1px solid var(--border-subtle)', padding: '10px 16px',
-          display: 'flex', gap: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch'
+          gap: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch'
         }}
       >
         {SECTIONS.map((s) => (
