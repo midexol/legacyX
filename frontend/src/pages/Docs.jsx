@@ -16,7 +16,22 @@ const SECTION_HEADERS = {
     badge: 'Overview & Philosophy',
     titleMain: 'Understand LegacyX ',
     titleGradient: 'in plain English',
-    description: 'No jargon required. This section explains what LegacyX actually does, walks through how your assets are protected, and why non-custodial digital estate planning matters.'
+    description: (
+      <>
+        No jargon required. This page explains what LegacyX actually does, walks through
+        how your assets are protected, and answers safety questions. Want smart contract details? Jump to{' '}
+        <button
+          onClick={() => window.__switchDocsSection && window.__switchDocsSection('technical')}
+          style={{
+            color: 'var(--gold)', textDecoration: 'underline', fontWeight: 700,
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontSize: 'inherit', fontFamily: 'inherit'
+          }}
+        >
+          Technical Deep-Dive
+        </button>.
+      </>
+    )
   },
   howitworks: {
     badge: 'Execution Architecture',
@@ -174,6 +189,13 @@ export default function Docs() {
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    window.__switchDocsSection = switchSection;
+    return () => {
+      delete window.__switchDocsSection;
+    };
+  }, []);
 
   const copyText = (text, label) => {
     navigator.clipboard.writeText(text);
