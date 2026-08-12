@@ -34,7 +34,7 @@ const SECTION_HEADERS = {
     badge: 'Developer Reference',
     titleMain: 'Technical ',
     titleGradient: 'Deep-Dive',
-    description: 'Developer documentation covering Solidity smart contracts, Flare FTSO v2 oracle pricing, Flare Data Connector (FDC) attestations, and LayerZero V2 cross-chain relays.'
+    description: 'Complete developer documentation covering Solidity smart contracts, Flare FTSO v2, Flare Data Connector (FDC) attestations, LayerZero V2 relays, and REST APIs.'
   }
 };
 
@@ -94,41 +94,60 @@ const FAQ = [
   },
 ];
 
-const TECHNICAL = [
+const TECHNICAL_COMPONENTS = [
   {
-    title: 'Multi-factor inheritance trigger', tag: 'CORE MODEL', tagColor: 'gold',
+    title: 'Multi-Factor Inheritance Trigger Engine', tag: 'CORE SMART CONTRACT', tagColor: 'gold',
     body: (
       <>
-        Rather than a single inactivity timer triggering an immediate payout, a vault condition
-        can be <code>INACTIVITY</code> (a heartbeat countdown that moves the vault to a
-        grace review state on expiry), <code>MULTI_PARTY_APPROVAL</code> (M-of-N guardian
-        addresses each submit a signature proving control of their key before the condition is
-        satisfied), or <code>LEGAL_DOCUMENT</code> (a hashed document reference submitted as
-        evidence). Conditions can be combined on a single vault so a real trigger requires more
-        than one signal.
+        Built into <code>LegacyVault.sol</code>, inheritance triggers support multiple condition types:
+        <code>INACTIVITY</code> (heartbeat countdown that moves the vault to a grace state on expiry),
+        <code>MULTI_PARTY_APPROVAL</code> (M-of-N guardian signatures proving cryptographic consent), and
+        <code>LEGAL_DOCUMENT</code> (hashed document references verified via attestation). Conditions can be combined on a single vault so a payout requires multiple verified signals.
       </>
     ),
   },
   {
-    title: 'Flare FTSO v2', tag: 'SYNCED', tagColor: 'green',
-    body: "LegacyX reads Flare's decentralized Time Series Oracle for FXRP/USD pricing, used to display estate valuations in USD without relying on a centralized price feed.",
+    title: 'Flare FTSO v2 Oracle Integration', tag: 'DECENTRALIZED ORACLE', tagColor: 'green',
+    body: "LegacyX queries Flare's Time Series Oracle (FTSO v2) directly on-chain for sub-second FXRP/USD and FLR/USD pricing. This powers estate valuation, beneficiary percentage calculations, and private OTC trade valuation without relying on centralized price feeds.",
   },
   {
-    title: 'Evidence verification (FDC)', tag: 'HONEST NOTE', tagColor: 'blue',
+    title: 'Flare Data Connector (FDC) Evidence Verification', tag: 'DECENTRALIZED ATTESTATION', tagColor: 'blue',
     body: (
       <>
-        There is no live, queryable government death registry to check against: so the Flare
-        Data Connector role here is verifying the <strong>integrity and existence</strong> of a
-        submitted attestation (that a specific document hash was submitted and matches the
-        expected format), not performing a real-time government lookup. Combined with guardian
-        confirmation, this is what actually gates a vault unlock.
+        The Flare Data Connector verifies the <strong>integrity and cryptographic existence</strong> of off-chain attestation payloads (such as document hashes or evidence proofs) without centralized government registries. Verified attestations are submitted on-chain directly to <code>LegacyVault.sol.verifyCondition()</code>.
       </>
     ),
   },
   {
-    title: 'Private OTC — matching only (Phase 1)', tag: 'NON-CUSTODIAL', tagColor: 'gold',
-    body: 'The OTC marketplace privately matches a beneficiary who wants to liquidate inherited FXRP with a counterparty, without exposing wallet size or address on a public order book. LegacyX does not custody funds or take a fee at this stage: settlement happens directly between the two wallets. Custodial settlement is deliberately deferred until a compliance review is complete.',
+    title: 'FAssets & LayerZero V2 Cross-Chain Claims', tag: 'OMNICHAIN OFT', tagColor: 'purple',
+    body: (
+      <>
+        Vault collateral utilizes <code>FXRP</code> via Flare's FAssets framework and LayerZero OFT Adapter (<code>0x0b6A3645c240605887a5532109323A3E12273dc7</code>). When a beneficiary's registered home chain is outside Flare, calling <code>claim()</code> executes <code>IOFT(FXRP).send()</code> to bridge tokens directly to their native chain.
+      </>
+    ),
   },
+  {
+    title: 'Multi-Chain State Sync (LegacyVaultRelay.sol)', tag: 'LAYERZERO V2 OAPP', tagColor: 'gold',
+    body: (
+      <>
+        Deploys as a LayerZero V2 OApp across chains (Flare Coston2 EID 40268 and Base Sepolia EID 40245). When an owner executes <code>pingHeartbeat()</code> on Flare, <code>LegacyVaultRelay</code> broadcasts cross-chain state updates to sibling vaults, synchronizing the owner's estate globally.
+      </>
+    ),
+  },
+  {
+    title: 'Private OTC Settlement Engine (OtcSettlement.sol)', tag: 'NON-CUSTODIAL OTC', tagColor: 'green',
+    body: 'Pairs an off-chain price-time-priority matching engine with an on-chain atomic settlement contract. Beneficiaries can liquidate inherited FXRP into USDC or FLR without public order book tracking or market slippage.',
+  },
+];
+
+const API_ENDPOINTS = [
+  { method: 'POST', path: '/api/auth/nonce', desc: 'Request SIWE one-time login nonce for wallet authentication' },
+  { method: 'POST', path: '/api/auth/verify', desc: 'Verify EIP-191 signature and issue JWT session token' },
+  { method: 'POST', path: '/api/vaults', desc: 'Deploy or record new Legacy Vault configuration' },
+  { method: 'POST', path: '/api/vaults/:id/heartbeat', desc: 'Reset vault inactivity countdown timer (Owner ping)' },
+  { method: 'POST', path: '/api/conditions/:id/verify', desc: 'Submit FDC attestation proof to trigger condition unlock' },
+  { method: 'GET',  path: '/api/orders', desc: 'Fetch redacted active orders from Private OTC Desk' },
+  { method: 'POST', path: '/api/orders', desc: 'Create private sell order for inherited FXRP assets' },
 ];
 
 export default function Docs() {
@@ -177,7 +196,7 @@ export default function Docs() {
   const q = searchQuery.toLowerCase().trim();
   const filteredFaq = q ? FAQ.filter(f => f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q)) : FAQ;
   const filteredSteps = q ? STEPS.filter(s => s.title.toLowerCase().includes(q) || s.body.toLowerCase().includes(q)) : STEPS;
-  const filteredTech = q ? TECHNICAL.filter(t => t.title.toLowerCase().includes(q)) : TECHNICAL;
+  const filteredTech = q ? TECHNICAL_COMPONENTS.filter(t => t.title.toLowerCase().includes(q)) : TECHNICAL_COMPONENTS;
 
   return (
     <div ref={pageRef} style={{ position: 'relative', minHeight: '100vh', background: 'var(--bg-primary)' }}>
@@ -316,14 +335,15 @@ export default function Docs() {
           <div className="card" style={{ padding: 16, marginTop: 'auto', background: 'var(--bg-card)' }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Icn name="shield" size={14} />
-              <span>Quick Facts</span>
+              <span>Quick Specs</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 11.5 }}>
               {[
                 ['Network', 'Flare Coston2 (114)'],
-                ['Primary Asset', 'FXRP / FAssets'],
-                ['Fund Control', 'Non-custodial Contract'],
-                ['Legal Will Equivalent', 'No (Technical Transfer)'],
+                ['Compiler', 'Solidity 0.8.24'],
+                ['Oracle', 'Flare FTSO v2'],
+                ['Cross-Chain', 'LayerZero V2 OApp'],
+                ['Attestation', 'Flare Data Connector'],
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 6 }}>
                   <span style={{ color: 'var(--text-muted)' }}>{k}</span>
@@ -342,7 +362,7 @@ export default function Docs() {
             width: '100%', boxSizing: 'border-box'
           }}
         >
-          {/* Dynamic Module Header Banner (Context Aware) */}
+          {/* Dynamic Module Header Banner */}
           <div style={{ marginBottom: 36, animation: 'fade-up 0.4s var(--ease-out) both' }}>
             <div className="badge badge-gold" style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <span className="badge-dot" />
@@ -357,7 +377,7 @@ export default function Docs() {
             </p>
           </div>
 
-          {/* Search Result Bar */}
+          {/* Search Bar Filter Banner */}
           {searchQuery && (
             <div className="card" style={{ marginBottom: 24, padding: '12px 18px', background: 'rgba(var(--blue-rgb),0.08)', borderColor: 'rgba(var(--blue-rgb),0.2)' }}>
               <span style={{ fontSize: 13, color: 'var(--blue)' }}>
@@ -387,7 +407,7 @@ export default function Docs() {
 
               <div className="grid-2" style={{ marginBottom: 28, display: 'grid', gap: 20 }}>
                 <div className="card" style={{ padding: 24 }}>
-                  <div style={{ color: 'var(--gold)', marginBottom: 14 }}><Icn name="lock" size=26 /></div>
+                  <div style={{ color: 'var(--gold)', marginBottom: 14 }}><Icn name="lock" size={26} /></div>
                   <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>You keep full control</div>
                   <div className="text-secondary" style={{ fontSize: 14, lineHeight: 1.6 }}>
                     Your FXRP sits in a vault only you can move, withdraw from, or reconfigure for as long as you are active. LegacyX never holds your funds.
@@ -460,29 +480,60 @@ export default function Docs() {
             </div>
           )}
 
-          {/* SECTION 4: TECHNICAL DEEP-DIVE */}
+          {/* SECTION 4: TECHNICAL DEEP-DIVE (DEVELOPER REFERENCE) */}
           {active === 'technical' && (
             <div key={active} style={{ animation: 'fade-up 0.4s var(--ease-out) both' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 36 }}>
-                {filteredTech.map((item) => (
-                  <div key={item.title} className="card" style={{ padding: 22 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{item.title}</span>
-                      <span className={`badge badge-${item.tagColor}`}>{item.tag}</span>
+              {/* Architecture Components */}
+              <div style={{ marginBottom: 36 }}>
+                <div className="section-eyebrow" style={{ marginBottom: 14 }}>Core Infrastructure & Flare Integrations</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {filteredTech.map((item) => (
+                    <div key={item.title} className="card" style={{ padding: 22 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{item.title}</span>
+                        <span className={`badge badge-${item.tagColor}`}>{item.tag}</span>
+                      </div>
+                      <div className="text-secondary" style={{ fontSize: 14, lineHeight: 1.7 }}>{item.body}</div>
                     </div>
-                    <div className="text-secondary" style={{ fontSize: 14, lineHeight: 1.7 }}>{item.body}</div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
-              {/* Contract Addresses Table */}
+              {/* REST API Reference for Developers */}
               <div style={{ marginBottom: 36 }}>
-                <div className="section-eyebrow" style={{ marginBottom: 14 }}>Deployed Contracts (Flare Coston2 Testnet - Chain ID 114)</div>
+                <div className="section-eyebrow" style={{ marginBottom: 14 }}>Backend REST API Reference</div>
+                <div className="card" style={{ padding: 20 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+                    Integrators can interact with the LegacyX API using standard EIP-191 SIWE wallet signatures. Pass <code>Authorization: Bearer JWT_TOKEN</code> for authenticated endpoints.
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {API_ENDPOINTS.map((ep) => (
+                      <div key={ep.path} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', flexWrap: 'wrap' }}>
+                        <span style={{
+                          padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 11, fontWeight: 700,
+                          background: ep.method === 'POST' ? 'rgba(var(--blue-rgb),0.2)' : 'rgba(var(--green-rgb),0.2)',
+                          color: ep.method === 'POST' ? 'var(--blue)' : 'var(--green)',
+                          fontFamily: 'monospace'
+                        }}>
+                          {ep.method}
+                        </span>
+                        <code style={{ fontFamily: 'monospace', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)' }}>{ep.path}</code>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 'auto' }}>{ep.desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Deployed Contract Addresses Table */}
+              <div style={{ marginBottom: 36 }}>
+                <div className="section-eyebrow" style={{ marginBottom: 14 }}>Deployed Smart Contracts (Flare Coston2 - Chain ID 114)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    { name: 'LegacyVault.sol', address: '0xD59dbEa6435cf284E80a2745D43b49c2bD89D795', desc: 'Main Vault Execution Contract' },
-                    { name: 'LegacyVaultRelay.sol', address: '0x6aecedc437b6679d7c0f29863db1b059fccaf977', desc: 'LayerZero V2 Multi-Chain Relay' },
-                    { name: 'OtcSettlement.sol', address: '0x3B718104E9284192A0b0019245C4E5E89F29', desc: 'Non-Custodial Private OTC Desk' },
+                    { name: 'LegacyVault.sol', address: '0xD59dbEa6435cf284E80a2745D43b49c2bD89D795', desc: 'Main Vault Execution & Claim Contract' },
+                    { name: 'LegacyVaultRelay.sol', address: '0x6aecedc437b6679d7c0f29863db1b059fccaf977', desc: 'LayerZero V2 Multi-Chain Relay OApp' },
+                    { name: 'OtcSettlement.sol', address: '0x3B718104E9284192A0b0019245C4E5E89F29', desc: 'Non-Custodial Private OTC Desk Settlement' },
+                    { name: 'FXRP (OFT Adapter)', address: '0x0b6A3645c240605887a5532109323A3E12273dc7', desc: 'Official LayerZero-wrapped FXRP FAsset' },
                   ].map((c) => (
                     <div key={c.name} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', gap: 16, flexWrap: 'wrap' }}>
                       <div>
@@ -506,18 +557,18 @@ export default function Docs() {
                 </div>
               </div>
 
-              {/* Interface Code Sample */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div className="section-eyebrow" style={{ margin: 0 }}>Core Interface Contract</div>
+              {/* Complete Interface Code Spec */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div className="section-eyebrow" style={{ margin: 0 }}>ILegacyVault.sol Interface Specification</div>
                   <button
-                    onClick={() => copyText(`// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ninterface ILegacyVault {\n    enum VaultStatus { ACTIVE, GRACE_PERIOD, UNLOCKED }\n    function pingHeartbeat() external;\n    function verifyCondition(uint256 conditionId) external;\n    function claim(address beneficiary) external;\n}`, 'Interface Code')}
+                    onClick={() => copyText(`// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ninterface ILegacyVault {\n    enum VaultStatus { ACTIVE, GRACE_PERIOD, UNLOCKED }\n    enum ConditionType { INACTIVITY, MANUAL_APPROVAL, MULTI_PARTY_APPROVAL, LEGAL_DOCUMENT }\n\n    struct Beneficiary {\n        address wallet;\n        uint256 allocationBps;\n        uint32 homeChainEid;\n    }\n\n    event HeartbeatPinged(address indexed owner, uint256 timestamp);\n    event VaultUnlocked(uint256 totalUnlockedBalance);\n    event BeneficiaryClaimed(address indexed beneficiary, uint256 amount);\n\n    function pingHeartbeat() external;\n    function verifyCondition(uint256 conditionId) external;\n    function claim(address beneficiary) external;\n}`, 'Full Interface Spec')}
                     style={{
-                      padding: '4px 10px', background: 'none', border: '1px solid var(--border-card)',
-                      borderRadius: 'var(--radius-sm)', fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer'
+                      padding: '6px 12px', background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+                      borderRadius: 'var(--radius-md)', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer'
                     }}
                   >
-                    Copy Interface
+                    Copy Solidity Code
                   </button>
                 </div>
                 <pre style={{
@@ -531,6 +582,13 @@ pragma solidity ^0.8.24;
 
 interface ILegacyVault {
     enum VaultStatus { ACTIVE, GRACE_PERIOD, UNLOCKED }
+    enum ConditionType { INACTIVITY, MANUAL_APPROVAL, MULTI_PARTY_APPROVAL, LEGAL_DOCUMENT }
+
+    struct Beneficiary {
+        address wallet;
+        uint256 allocationBps;
+        uint32 homeChainEid;
+    }
 
     event HeartbeatPinged(address indexed owner, uint256 timestamp);
     event VaultUnlocked(uint256 totalUnlockedBalance);
@@ -545,7 +603,7 @@ interface ILegacyVault {
             </div>
           )}
 
-          {/* Section Continuity Navigation Cards — Leading directly to Next / Previous Modules */}
+          {/* Section Continuity Navigation Cards */}
           <div
             style={{
               marginTop: 60, paddingTop: 30, borderTop: '1px solid var(--border-subtle)',
