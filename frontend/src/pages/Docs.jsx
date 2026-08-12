@@ -11,48 +11,6 @@ const SECTIONS = [
   { id: 'technical',   icon: 'settings', label: 'Technical Deep-Dive', subtitle: 'Architecture & Contracts' },
 ];
 
-const SECTION_HEADERS = {
-  overview: {
-    badge: 'Overview & Philosophy',
-    titleMain: 'Understand LegacyX ',
-    titleGradient: 'in plain English',
-    description: (
-      <>
-        No jargon required. This page explains what LegacyX actually does, walks through
-        how your assets are protected, and answers safety questions. Want smart contract details? Jump to{' '}
-        <button
-          onClick={() => window.__switchDocsSection && window.__switchDocsSection('technical')}
-          style={{
-            color: 'var(--gold)', textDecoration: 'underline', fontWeight: 700,
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontSize: 'inherit', fontFamily: 'inherit'
-          }}
-        >
-          Technical Deep-Dive
-        </button>.
-      </>
-    )
-  },
-  howitworks: {
-    badge: 'Execution Architecture',
-    titleMain: 'Step-by-Step ',
-    titleGradient: 'Inheritance Flow',
-    description: 'Six transparent steps detailing the lifecycle of a Legacy Vault: from depositing FXRP on Flare to automated condition verification and beneficiary claim.'
-  },
-  safety: {
-    badge: 'Security & FAQs',
-    titleMain: 'Is My Crypto ',
-    titleGradient: 'Completely Safe?',
-    description: 'Direct answers to questions regarding smart contract security, non-custodial vault ownership, and guardian permissions.'
-  },
-  technical: {
-    badge: 'Developer Reference',
-    titleMain: 'Technical ',
-    titleGradient: 'Deep-Dive',
-    description: 'Complete developer documentation covering Solidity smart contracts, Flare FTSO v2, Flare Data Connector (FDC) attestations, LayerZero V2 relays, and REST APIs.'
-  }
-};
-
 const STEPS = [
   {
     n: '1', icon: 'wallet',
@@ -190,13 +148,6 @@ export default function Docs() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    window.__switchDocsSection = switchSection;
-    return () => {
-      delete window.__switchDocsSection;
-    };
-  }, []);
-
   const copyText = (text, label) => {
     navigator.clipboard.writeText(text);
     setCopiedCode(label);
@@ -212,7 +163,6 @@ export default function Docs() {
   };
 
   const currentNav = nextPrevNav[active];
-  const headerInfo = SECTION_HEADERS[active] || SECTION_HEADERS.overview;
 
   // Filter content based on search query
   const q = searchQuery.toLowerCase().trim();
@@ -353,7 +303,7 @@ export default function Docs() {
             </div>
           </div>
 
-          {/* Quick Facts Card */}
+          {/* Quick Specs Card */}
           <div className="card" style={{ padding: 16, marginTop: 'auto', background: 'var(--bg-card)' }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Icn name="shield" size={14} />
@@ -384,21 +334,6 @@ export default function Docs() {
             width: '100%', boxSizing: 'border-box'
           }}
         >
-          {/* Dynamic Module Header Banner */}
-          <div style={{ marginBottom: 36, animation: 'fade-up 0.4s var(--ease-out) both' }}>
-            <div className="badge badge-gold" style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <span className="badge-dot" />
-              <span>{headerInfo.badge}</span>
-            </div>
-            <h1 className="text-h1" style={{ marginBottom: 12, fontSize: 'clamp(28px,4vw,42px)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-              {headerInfo.titleMain}
-              <span className="text-gradient-gold">{headerInfo.titleGradient}</span>
-            </h1>
-            <p className="text-body text-secondary" style={{ maxWidth: 680, fontSize: 15, lineHeight: 1.7 }}>
-              {headerInfo.description}
-            </p>
-          </div>
-
           {/* Search Bar Filter Banner */}
           {searchQuery && (
             <div className="card" style={{ marginBottom: 24, padding: '12px 18px', background: 'rgba(var(--blue-rgb),0.08)', borderColor: 'rgba(var(--blue-rgb),0.2)' }}>
@@ -408,9 +343,32 @@ export default function Docs() {
             </div>
           )}
 
-          {/* SECTION 1: WHAT IS LEGACYX */}
+          {/* SECTION 1: WHAT IS LEGACYX (ONLY SECTION WITH UNDERSTAND LEGACYX IN PLAIN ENGLISH BANNER) */}
           {active === 'overview' && (
             <div key={active} style={{ animation: 'fade-up 0.4s var(--ease-out) both' }}>
+              <div style={{ marginBottom: 36 }}>
+                <div className="badge badge-gold" style={{ marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span className="badge-dot" />
+                  <span>LegacyX Docs</span>
+                </div>
+                <h1 className="text-h1" style={{ marginBottom: 12, fontSize: 'clamp(28px,4vw,42px)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                  Understand LegacyX <span className="text-gradient-gold">in plain English</span>
+                </h1>
+                <p className="text-body text-secondary" style={{ maxWidth: 680, fontSize: 15, lineHeight: 1.7 }}>
+                  No jargon required. This page explains what LegacyX actually does, walks through how your assets are protected, and answers safety questions. Want smart contract details? Jump to{' '}
+                  <button
+                    onClick={() => switchSection('technical')}
+                    style={{
+                      color: 'var(--gold)', textDecoration: 'underline', fontWeight: 700,
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      fontSize: 'inherit', fontFamily: 'inherit'
+                    }}
+                  >
+                    Technical Deep-Dive
+                  </button>.
+                </p>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontSize: 15, lineHeight: 1.75, color: 'var(--text-secondary)', marginBottom: 28 }}>
                 <p>
                   If you keep crypto in a normal wallet and something happens to you: you lose your
@@ -459,6 +417,14 @@ export default function Docs() {
           {/* SECTION 2: HOW IT WORKS */}
           {active === 'howitworks' && (
             <div key={active} style={{ animation: 'fade-up 0.4s var(--ease-out) both' }}>
+              <div style={{ marginBottom: 32 }}>
+                <div className="section-eyebrow" style={{ marginBottom: 10 }}>Execution Architecture</div>
+                <h1 className="text-h1" style={{ marginBottom: 12, fontSize: 'clamp(28px,4vw,42px)', fontWeight: 800 }}>How It Works</h1>
+                <p className="text-secondary" style={{ fontSize: 15, lineHeight: 1.7, maxWidth: 680 }}>
+                  Six transparent steps detailing the lifecycle of a Legacy Vault: from depositing FXRP on Flare to automated condition verification and beneficiary claim.
+                </p>
+              </div>
+
               <div style={{ position: 'relative', paddingLeft: 8 }}>
                 <div style={{ position: 'absolute', left: 23, top: 20, bottom: 20, width: 2, background: 'var(--border-subtle)' }} aria-hidden="true" />
                 {filteredSteps.map((s, i) => (
@@ -488,6 +454,14 @@ export default function Docs() {
           {/* SECTION 3: IS MY CRYPTO SAFE */}
           {active === 'safety' && (
             <div key={active} style={{ animation: 'fade-up 0.4s var(--ease-out) both' }}>
+              <div style={{ marginBottom: 32 }}>
+                <div className="section-eyebrow" style={{ marginBottom: 10 }}>Security & FAQs</div>
+                <h1 className="text-h1" style={{ marginBottom: 12, fontSize: 'clamp(28px,4vw,42px)', fontWeight: 800 }}>Is My Crypto Safe?</h1>
+                <p className="text-secondary" style={{ fontSize: 15, lineHeight: 1.7, maxWidth: 680 }}>
+                  Direct answers to questions regarding smart contract security, non-custodial vault ownership, and guardian permissions.
+                </p>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {filteredFaq.map((item) => (
                   <div key={item.q} className="card" style={{ padding: 22 }}>
@@ -505,6 +479,14 @@ export default function Docs() {
           {/* SECTION 4: TECHNICAL DEEP-DIVE (DEVELOPER REFERENCE) */}
           {active === 'technical' && (
             <div key={active} style={{ animation: 'fade-up 0.4s var(--ease-out) both' }}>
+              <div style={{ marginBottom: 32 }}>
+                <div className="section-eyebrow" style={{ marginBottom: 10 }}>Developer Reference</div>
+                <h1 className="text-h1" style={{ marginBottom: 12, fontSize: 'clamp(28px,4vw,42px)', fontWeight: 800 }}>Technical Deep-Dive</h1>
+                <p className="text-secondary" style={{ fontSize: 15, lineHeight: 1.7, maxWidth: 680 }}>
+                  Complete developer documentation covering Solidity smart contracts, Flare FTSO v2, Flare Data Connector (FDC) attestations, LayerZero V2 relays, and REST APIs.
+                </p>
+              </div>
+
               {/* Architecture Components */}
               <div style={{ marginBottom: 36 }}>
                 <div className="section-eyebrow" style={{ marginBottom: 14 }}>Core Infrastructure & Flare Integrations</div>
