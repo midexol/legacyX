@@ -1,8 +1,21 @@
 # LegacyX — On-Chain Inheritance & Private OTC Engine on Flare Network
 
-**A non-custodial, programmable digital estate & inheritance protocol built natively on Flare.**
+**A non-custodial, programmable digital estate and inheritance protocol built natively on Flare.**
 
 LegacyX ensures your digital assets (`FXRP`, `FLR`, and cross-chain tokens) are never lost to forgotten keys or unexpected life events. By combining **Flare Data Connector (FDC)** attestations, **Flare Time Series Oracle (FTSO v2)** pricing, **FAssets/LayerZero OFT** cross-chain transfers, and a **Private OTC Settlement Desk**, LegacyX provides automated, trustless inheritance distribution and confidential asset liquidation.
+
+---
+
+## Submission Summary & Quick Links
+
+- **Project Name:** LegacyX
+- **Selected Bounties:** Flare Ecosystem & Network Integration Bounty (FTSO v2, FDC, FAssets/FXRP, LayerZero V2 Relay)
+- **Target User:** Self-custodial crypto investors, XRP/FXRP holders, digital asset estate planners, and next-of-kin beneficiaries.
+- **Live Working App:** https://legacy-x-theta.vercel.app
+- **Interactive Unlock Demo:** https://legacy-x-theta.vercel.app/unlock
+- **Documentation:** https://legacy-x-theta.vercel.app/docs
+- **GitHub Repository:** https://github.com/midexol/legacyX
+- **Deployment Network:** Flare Coston2 Testnet (Chain ID 114) & Base Sepolia
 
 ---
 
@@ -11,11 +24,31 @@ LegacyX ensures your digital assets (`FXRP`, `FLR`, and cross-chain tokens) are 
 Over **$30 Billion** in cryptocurrency is permanently trapped in inaccessible wallets due to missing private keys, sudden incapacitation, or deceased owners with no digital estate plan. Traditional legal wills cannot execute on-chain transfers, while central exchanges require custodial surrender of funds.
 
 **LegacyX solves this with a non-custodial, smart contract protocol on Flare Network:**
-1. **Deposit & Lock** — Lock assets (e.g. `FXRP`) into a personal, non-custodial `LegacyVault.sol` contract on Flare.
+1. **Deposit and Lock** — Lock assets (e.g. `FXRP`) into a personal, non-custodial `LegacyVault.sol` contract on Flare.
 2. **Configure Beneficiaries** — Assign wallet addresses or email notifications with exact percentage allocations.
 3. **Multi-Factor Conditions** — Set customizable unlock rules: Inactivity Heartbeat, Guardian Multi-Party Approval, or FDC-verified Evidence.
-4. **Automated Verification & Release** — When verified on-chain, assets are distributed directly to beneficiaries without intermediaries.
+4. **Automated Verification and Release** — When verified on-chain, assets are distributed directly to beneficiaries without intermediaries.
 5. **Private OTC Liquidation** — Beneficiaries can privately liquidate inherited `FXRP` into cash-equivalent stablecoins without market slippage or public order book exposure.
+
+---
+
+## What Was Newly Built During the Program
+
+LegacyX was built 100% from scratch during the hackathon program:
+
+- **Smart Contracts (Solidity 0.8.24 + Foundry)**:
+  - `LegacyVault.sol`: Core contract managing non-custodial deposits, condition checks, guardian threshold verifications, and claims.
+  - `LegacyVaultRelay.sol`: LayerZero V2 OApp for cross-chain estate state synchronization between Flare Coston2 and Base Sepolia.
+  - `OtcSettlement.sol`: On-chain atomic settlement desk for private OTC token trades.
+- **Web Application (Vite + React 19)**:
+  - Full Web3 wallet provider (MetaMask + 1-click Demo Testnet Wallet).
+  - Interactive multi-step vault creation wizard with real-time beneficiary percentage validation.
+  - Dynamic vault unlock simulator and private OTC trading interface.
+  - Fully responsive, accessible documentation hub (`/docs`).
+- **Backend Verification Engine (Express + TypeScript + Prisma + PostgreSQL)**:
+  - Background automated verification sweep service.
+  - Off-chain price-time-priority OTC matching engine.
+  - EIP-191 SIWE wallet signature authentication system.
 
 ---
 
@@ -45,13 +78,13 @@ LegacyX is designed from the ground up to leverage Flare's native interoperabili
 └──────────────────────────────────────────────────┘
 ```
 
-### 1. **Flare Network (Primary Execution & Storage Layer)**
+### 1. **Flare Network (Primary Execution and Storage Layer)**
 - **Chain ID:** `114` (Coston2 Testnet) / `14` (Flare Mainnet)
 - All `LegacyVault.sol`, `LegacyVaultRelay.sol`, and `OtcSettlement.sol` contracts run natively on Flare C-Chain, benefitting from EVM compatibility, fast block finality, and low gas fees.
 
-### 2. **FXRP & FAssets (LayerZero OFT Standard)**
+### 2. **FXRP and FAssets (LayerZero OFT Standard)**
 - `FXRP` is the primary collateral asset used in LegacyX vaults.
-- Leverages Flare's **FAssets** system and **LayerZero OFT (Omnichain Fungible Token) Adapter** (`0x0b6A3645c240605887a5532109323A3E12273dc7` on Coston2).
+- Leverages Flare's **FAssets** system and **LayerZero OFT Adapter** (`0x0b6A3645c240605887a5532109323A3E12273dc7` on Coston2).
 - Enables **Cross-Chain Claim Bridging**: When a beneficiary's home chain is outside Flare (e.g. Arbitrum, Base, Ethereum), calling `claim()` triggers `IOFT.send()` to automatically bridge the payout to their native chain without manual cross-chain bridging steps.
 
 ### 3. **Flare Data Connector (FDC) / State Connector**
@@ -128,9 +161,9 @@ sequenceDiagram
 
 | Data Flow Stage | Initiator | Flare Stack Component | Description |
 |---|---|---|---|
-| **1. Valuation & Pricing** | Frontend / Backend | **Flare FTSO v2** | Queries sub-second decentralized `FXRP/USD` oracle price feeds to display real-time estate values and beneficiary allocations. |
-| **2. Vault Deployment & Deposit** | Web3 Wallet | **Flare C-Chain RPC (Coston2)** | Interacts with `LegacyVault.sol` to lock `FXRP` tokens non-custodially into the smart contract. |
-| **3. Heartbeat & Multi-Chain Sync** | Vault Owner | **`LegacyVaultRelay.sol` + LayerZero V2** | Sending `pingHeartbeat()` on Flare broadcasts a cross-chain message to update sibling vaults on secondary EVM chains. |
+| **1. Valuation and Pricing** | Frontend / Backend | **Flare FTSO v2** | Queries sub-second decentralized `FXRP/USD` oracle price feeds to display real-time estate values and beneficiary allocations. |
+| **2. Vault Deployment and Deposit** | Web3 Wallet | **Flare C-Chain RPC (Coston2)** | Interacts with `LegacyVault.sol` to lock `FXRP` tokens non-custodially into the smart contract. |
+| **3. Heartbeat and Multi-Chain Sync** | Vault Owner | **`LegacyVaultRelay.sol` + LayerZero V2** | Sending `pingHeartbeat()` on Flare broadcasts a cross-chain message to update sibling vaults on secondary EVM chains. |
 | **4. External Data Verification** | Backend / Verifier | **Flare Data Connector (FDC)** | Verifies off-chain evidence payloads (legal doc hashes, death attestations) and submits proofs to `LegacyVault.sol`. |
 | **5. Automated Unlock** | Smart Contract | **Flare C-Chain Event Bus** | Flips vault status to `UNLOCKED`, snapshots `unlockedBalance`, and emits `VaultUnlocked` on-chain event. |
 | **6. Cross-Chain Claim** | Beneficiary Wallet | **FXRP FAsset / LayerZero OFT** | Calls `claim()`. If beneficiary is on another chain, `IOFT.send()` bridges `FXRP` directly to their home chain. |
@@ -138,7 +171,7 @@ sequenceDiagram
 
 ---
 
-## Smart Contracts & Live Testnet Deployments
+## Smart Contracts and Live Testnet Deployments
 
 All contracts are compiled with Solidity `0.8.24` and deployed on **Flare Coston2 Testnet** (Chain ID 114) and Base Sepolia.
 
@@ -154,9 +187,26 @@ All contracts are compiled with Solidity `0.8.24` and deployed on **Flare Coston
 ### Verified On-Chain Transactions (Flare Coston2):
 1. **Deposit 5 FXRP into Vault:** [`0x1f6b3c44853ec2e08a473e1484f594485be26103abcee1d031cea997b7f35991`](https://coston2.testnet.flarescan.com/address/0x1f6b3c44853ec2e08a473e1484f594485be26103abcee1d031cea997b7f35991)
 2. **Cross-Chain Heartbeat Relay:** [`0x58541c969d5118c8d5fdab49da0031848ca133add233daadb375b8500f8f3194`](https://coston2.testnet.flarescan.com/tx/0x58541c969d5118c8d5fdab49da0031848ca133add233daadb375b8500f8f3194) · [LayerZero Scan](https://testnet.layerzeroscan.com/tx/0x58541c969d5118c8d5fdab49da0031848ca133add233daadb375b8500f8f3194)
-3. **Beneficiary & Condition Addition:** [`0xe01ea9b4438fd537649dea6f696302fab80d7e21d294e07080fed181447706b4`](https://coston2.testnet.flarescan.com/tx/0xe01ea9b4438fd537649dea6f696302fab80d7e21d294e07080fed181447706b4)
+3. **Beneficiary and Condition Addition:** [`0xe01ea9b4438fd537649dea6f696302fab80d7e21d294e07080fed181447706b4`](https://coston2.testnet.flarescan.com/tx/0xe01ea9b4438fd537649dea6f696302fab80d7e21d294e07080fed181447706b4)
 4. **On-Chain Vault Unlock:** [`0x8322df761762faf5b5315581492a5678c553066dc62241534a28deee446974b1`](https://coston2.testnet.flarescan.com/tx/0x8322df761762faf5b5315581492a5678c553066dc62241534a28deee446974b1)
 5. **Beneficiary Claim Execution:** [`0x2b52d32c529076cc172617ebb971cb7c4bef668845f2edaa214a8fd719666384`](https://coston2.testnet.flarescan.com/tx/0x2b52d32c529076cc172617ebb971cb7c4bef668845f2edaa214a8fd719666384)
+
+---
+
+## Testing, Feedback and Traction Signals
+
+- **Instant Testnet Demo Wallet**: Built a 1-click Testnet Demo Wallet into the wallet connection modal so hackathon judges and non-crypto testers can instantly evaluate vault creation, heartbeat pings, dynamic unlock simulations, and OTC trading without setting up MetaMask or requesting testnet tokens.
+- **Community User Testing**: Tested vault configuration workflows with testnet users. Iterated on beneficiary percentage validation rules, wallet session reconnection state, and non-crypto email notification flows based on direct user feedback.
+- **Private OTC Matching Simulation**: Verified atomic, non-custodial token settlement (`FXRP` to `USDC/FLR`) on Flare Coston2 without exposing order book sizes publicly.
+
+---
+
+## Short Roadmap and Next Steps
+
+1. **Smart Contract Security Audit**: Conduct a formal third-party audit of `LegacyVault.sol` and `OtcSettlement.sol` before deploying to mainnet.
+2. **Flare Mainnet Deployment**: Deploy core vault protocol and FAssets collateral management on Flare Mainnet (Chain ID 14).
+3. **Legal Attestation Partnerships**: Partner with digital notary and identity attestation providers to expand Flare Data Connector (FDC) evidence feeds.
+4. **OTC Desk Compliance Framework**: Finalize regulatory compliance and licensing reviews for custodial settlement and fiat off-ramping options.
 
 ---
 
@@ -182,53 +232,7 @@ legacyX/
 
 ---
 
-## Quick Start & Local Setup
-
-### Prerequisites
-- **Node.js**: `v18+` or `v20+`
-- **Foundry**: Installed via `foundryup` (for contract development)
-- **Postgres**: Local PostgreSQL instance or free cloud database (e.g. Render/Neon)
-
-### 1. Clone & Install Dependencies
-```bash
-git clone https://github.com/midexol/legacyX.git
-cd legacyX
-
-# Install Frontend
-npm install --prefix frontend
-
-# Install Backend
-npm install --prefix backend
-
-# Install Contracts
-cd contracts && npm install && cd ..
-```
-
-### 2. Run Application Locally
-
-#### Option A: Frontend Only (Mock Mode)
-```bash
-npm run dev:frontend
-```
-*Access frontend at `http://localhost:5173`. Uses local state & mock data — no backend required.*
-
-#### Option B: Full Stack (Frontend + Backend)
-```bash
-# 1. Configure Backend Environment
-cp backend/.env.example backend/.env
-# Edit backend/.env and set DATABASE_URL="postgresql://user:pass@localhost:5432/legacyx"
-
-# 2. Initialize Database & Seed
-npm run --prefix backend prisma:migrate -- --name init
-npm run --prefix backend seed
-
-# 3. Start Both Services
-npm run dev:all
-```
-
----
-
-## Security & Disclaimer
+## Security and Disclaimer
 
 This software is a hackathon prototype developed for demonstration on the **Flare Coston2 Testnet**. Smart contracts have not undergone a formal security audit. Do not deploy to mainnet with real funds without conducting a comprehensive third-party audit.
 
