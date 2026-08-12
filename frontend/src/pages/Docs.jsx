@@ -610,17 +610,27 @@ interface ILegacyVault {
           {/* Section Continuity Navigation Cards */}
           <div
             style={{
-              marginTop: 60, paddingTop: 30, borderTop: '1px solid var(--border-subtle)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
+              marginTop: 60, paddingTop: 32, borderTop: '1px solid var(--border-subtle)',
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16
             }}
           >
             {currentNav?.prev ? (
               <button
                 onClick={() => switchSection(currentNav.prev.id)}
-                className="btn btn-ghost"
-                style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}
+                className="docs-nav-card"
+                style={{
+                  display: 'flex', flexDirection: 'column', padding: '16px 20px',
+                  background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+                  borderRadius: 'var(--radius-lg)', textAlign: 'left', cursor: 'pointer',
+                  gap: 4
+                }}
               >
-                <span>← Previous: {currentNav.prev.label}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                  ← Previous Module
+                </span>
+                <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {currentNav.prev.label}
+                </span>
               </button>
             ) : <div />}
 
@@ -628,18 +638,38 @@ interface ILegacyVault {
               currentNav.next.isLink ? (
                 <Link
                   to={currentNav.next.id}
-                  className="btn btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}
+                  className="docs-nav-card"
+                  style={{
+                    display: 'flex', flexDirection: 'column', padding: '16px 20px',
+                    background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+                    borderRadius: 'var(--radius-lg)', textAlign: 'right', cursor: 'pointer',
+                    gap: 4, textDecoration: 'none'
+                  }}
                 >
-                  <span>{currentNav.next.label} →</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--blue)' }}>
+                    Next Module →
+                  </span>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {currentNav.next.label}
+                  </span>
                 </Link>
               ) : (
                 <button
                   onClick={() => switchSection(currentNav.next.id)}
-                  className="btn btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}
+                  className="docs-nav-card"
+                  style={{
+                    display: 'flex', flexDirection: 'column', padding: '16px 20px',
+                    background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+                    borderRadius: 'var(--radius-lg)', textAlign: 'right', cursor: 'pointer',
+                    gap: 4
+                  }}
                 >
-                  <span>Next: {currentNav.next.label} →</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--blue)' }}>
+                    Next Module →
+                  </span>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {currentNav.next.label}
+                  </span>
                 </button>
               )
             )}

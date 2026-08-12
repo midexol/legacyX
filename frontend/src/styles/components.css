@@ -227,9 +227,18 @@
   }
 }
 
-/* ── Docs Layout Fixes ── */
+/* ── Docs Layout & Navigation Fixes ── */
 .docs-mobile-pills { display: none !important; }
 .docs-main-content { margin-left: 260px; padding: 100px 40px 80px; max-width: 960px; width: 100%; box-sizing: border-box; }
+
+.docs-nav-card {
+  transition: all 0.2s ease;
+}
+.docs-nav-card:hover {
+  border-color: rgba(var(--blue-rgb), 0.4) !important;
+  transform: translateY(-2px);
+  background: var(--bg-elevated) !important;
+}
 
 @media (max-width: 900px) {
   .docs-mobile-pills { display: flex !important; }
